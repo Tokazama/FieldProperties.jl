@@ -84,6 +84,21 @@ CodeInfo(
 1 ─ %1 = ImageProperties.getfield(m, :prop1)::Int64
 └──      return %1
 ) => Int64
+```
 
+```julia
+julia> img = ImageMeta(rand(4,4), sm)
+Float64 ImageMeta with:
+  data: 4×4 Array{Float64,2}
+  properties:
+    prop1: 2
+    prop2: 3
+
+julia> @code_typed ((m) -> m.prop1)(img)
+CodeInfo(
+1 ─ %1 = ImageMetadata.getfield(m, :properties)::SimpleMetadata{Dict{Symbol,Any}}
+│   %2 = ImageProperties.getfield(%1, :prop1)::Int64
+└──      return %2
+) => Int64
 ```
 

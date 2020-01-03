@@ -129,3 +129,15 @@ function set_property!(m::AbstractMetadata{M}, s::Symbol, val) where {M}
     end
     return setindex!(properties(m), val, s)
 end
+
+function Base.propertynames(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}) where {T,N}
+    return propertynames(properties(img))
+end
+
+function Base.getproperty(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}, s::Symbol) where {T,N}
+    return get_property(properties(img), s)
+end
+
+function Base.setproperty!(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}, s::Symbol, val) where {T,N}
+    return set_property!(properties(img), s, val)
+end
