@@ -1,0 +1,8 @@
+name = "ImageProperties"
+uuid = "127e4479-4c95-493a-afaa-609d38175b70"
+authors = ["zchristensen "]
+version = "0.1.0"
+
+[deps]
+ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
+ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49"
