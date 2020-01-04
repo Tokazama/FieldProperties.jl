@@ -5,7 +5,7 @@ ImageProperties provides dictionaries where the key-value pairs can be accessed
 and set like the properties of a structure.
 
 ```julia
-using ImageProperties, ImageProperties
+using ImageProperties, ImageCore, ImageMetadata, BenchmarkTools
 
 julia> m = Metadata()
 Metadata{Dict{Symbol,Any}} with 0 entries
@@ -180,3 +180,49 @@ CodeInfo(
 ) => Any
 ```
 
+## Improving permutations
+
+A very preliminary structure for enhancing the performance of spatial operations
+is the `SpatialProperties` type. It currently only encodes the `spacedirections`
+property, but is integrated into an alias for `ImageMeta`, `SpatialImage` (an `ImageMeta`
+that uses `SpatialProperties` as its dictionary).
+```julia
+julia> a = rand(2,2);
+
+julia> img1 = ImageMeta(a, spacedirections=spacedirections(a));
+
+julia> img2 = SpatialImage(a);
+
+julia> @btime spacedirections($img1)
+  7.528 ns (0 allocations: 0 bytes)
+((1, 0), (0, 1))
+
+julia> @btime spacedirections($img2)
+ 0.035 ns (0 allocations: 0 bytes)
+((1, 0), (0, 1))
+
+julia> @code_typed spacedirections(img1)
+CodeInfo(
+1 ─ %1  = ImageMetadata.getfield(img@_2, :properties)::Dict{Symbol,Any}
+│   %2  = π (:spacedirections, Core.Compiler.Const(:spacedirections, false))
+│   %3  = invoke Base.ht_keyindex(%1::Dict{Symbol,Any}, %2::Symbol)::Int64
+│   %4  = Base.slt_int(%3, 0)::Bool
+└──       goto #3 if not %4
+2 ─       goto #4
+3 ─ %7  = Base.getfield(%1, :vals)::Array{Any,1}
+│   %8  = Base.arrayref(false, %7, %3)::Any
+└──       goto #4
+4 ┄ %10 = φ (#2 => $(QuoteNode(ImageMetadata.IMNothing())), #3 => %8)::Any
+│   %11 = (%10 isa ImageMetadata.IMNothing)::Bool
+└──       goto #6 if not %11
+5 ─       return ((1, 0), (0, 1))
+6 ─       return %10
+) => Any
+
+julia> @code_typed spacedirections(img2)
+CodeInfo(
+1 ─ %1 = ImageMetadata.getfield(img, :properties)::SpatialProperties{Dict{Symbol,Any},Tuple{Tuple{Int64,Int64},Tuple{Int64,Int64}}}
+│   %2 = ImageProperties.getfield(%1, :spacedirections)::Tuple{Tuple{Int64,Int64},Tuple{Int64,Int64}}
+└──      return %2
+) => Tuple{Tuple{Int64,Int64},Tuple{Int64,Int64}}
+```

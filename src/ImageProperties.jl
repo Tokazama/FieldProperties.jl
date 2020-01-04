@@ -5,7 +5,9 @@ using ImageCore, ImageMetadata
 export
     # Types
     AbstractMetadata,
+    SpatialImage,
     Metadata,
+    SpatialProperties,
     # methods
     get_property,
     struct_properties,
@@ -13,5 +15,6 @@ export
 
 include("abstractmetadata.jl")
 include("metadata.jl")
+include("spatialproperties.jl")
 
 end # module

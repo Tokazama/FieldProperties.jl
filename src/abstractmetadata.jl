@@ -95,6 +95,7 @@ end
 end
 
 function get_property(m::AbstractMetadata{M}, s::Symbol) where {M<: AbstractMetadata}
+    Base.@_inline_meta
     for p in struct_properties(m)
         if p === s
             return getfield(m, s)
@@ -104,6 +105,7 @@ function get_property(m::AbstractMetadata{M}, s::Symbol) where {M<: AbstractMeta
 end
 
 function get_property(m::AbstractMetadata{M}, s::Symbol) where {M}
+    Base.@_inline_meta
     for p in struct_properties(m)
         if p === s
             return getfield(m, s)
@@ -113,6 +115,7 @@ function get_property(m::AbstractMetadata{M}, s::Symbol) where {M}
 end
 
 function set_property!(m::AbstractMetadata{M}, s::Symbol, val) where {M<: AbstractMetadata}
+    Base.@_inline_meta
     for p in struct_properties(m)
         if p === s
             return setfield!(m, s, val)
@@ -122,6 +125,7 @@ function set_property!(m::AbstractMetadata{M}, s::Symbol, val) where {M<: Abstra
 end
 
 function set_property!(m::AbstractMetadata{M}, s::Symbol, val) where {M}
+    Base.@_inline_meta
     for p in struct_properties(m)
         if p === s
             return setfield!(m, s, val)
@@ -130,14 +134,16 @@ function set_property!(m::AbstractMetadata{M}, s::Symbol, val) where {M}
     return setindex!(properties(m), val, s)
 end
 
-function Base.propertynames(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}) where {T,N}
+@inline function Base.propertynames(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}) where {T,N}
     return propertynames(properties(img))
 end
 
 function Base.getproperty(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}, s::Symbol) where {T,N}
+    Base.@_inline_meta
     return get_property(properties(img), s)
 end
 
 function Base.setproperty!(img::ImageMeta{T,N,<:AbstractArray{T,N},<:AbstractMetadata}, s::Symbol, val) where {T,N}
+    Base.@_inline_meta
     return set_property!(properties(img), s, val)
 end
