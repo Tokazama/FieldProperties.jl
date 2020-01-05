@@ -1,5 +1,14 @@
 # ImageProperties.jl
 
+## Goals
+
+ImageProperties is aimed at improving  properties in the `JuliaImage` ecosystem. Although this is currently aimed at integration with `ImageMetadata` the code here could easily be lifted and placed in most other structures to provide similar functionality. I've tried to consider these goals while creating this:
+
+1. Extensibility: Easy for developers to add new properties while using those previously defined
+2. Usability: It shouldn't make it harder for users to access or interact with properties.
+3. Optimization: It should be possible to optimize performance of accessing and setting properties without violating the first 2 goals.
+
+## How it works
 
 ImageProperties provides dictionaries where the key-value pairs can be accessed
 and set like the properties of a structure.
@@ -56,7 +65,6 @@ julia> Base.setproperty!(m::SimpleMetadata, s::Symbol, val) = set_property!(m, s
 # tell ImageProperties what fields should be considered properties
 julia> ImageProperties.struct_properties(::Type{<:SimpleMetadata}) = (:prop1,)
 ```
-
 
 Now we can create an instance of `SimpleMetadata`.
 ```julia
@@ -180,7 +188,7 @@ CodeInfo(
 ) => Any
 ```
 
-## Improving permutations
+## Improving performance of spatial properties
 
 A very preliminary structure for enhancing the performance of spatial operations
 is the `SpatialProperties` type. It currently only encodes the `spacedirections`
@@ -193,14 +201,27 @@ julia> img1 = ImageMeta(a, spacedirections=spacedirections(a));
 
 julia> img2 = SpatialImage(a);
 
+julia> @btime (img -> img.spacedirections)($img1)
+  13.624 ns (0 allocations: 0 bytes)
+((1, 0), (0, 1))
+
 julia> @btime spacedirections($img1)
-  7.528 ns (0 allocations: 0 bytes)
+  10.771 ns (0 allocations: 0 bytes)
+((1, 0), (0, 1))
+
+julia> @btime (img -> img.spacedirections)($img2)
+  0.040 ns (0 allocations: 0 bytes)
 ((1, 0), (0, 1))
 
 julia> @btime spacedirections($img2)
- 0.035 ns (0 allocations: 0 bytes)
+  0.044 ns (0 allocations: 0 bytes)
 ((1, 0), (0, 1))
+```
+The difference between the last two methods is probably negligable
 
+A large part of this performance improvement is due to type stability offered by
+`SpatialProperties`.
+```julia
 julia> @code_typed spacedirections(img1)
 CodeInfo(
 1 ─ %1  = ImageMetadata.getfield(img@_2, :properties)::Dict{Symbol,Any}
