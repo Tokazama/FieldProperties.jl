@@ -18,6 +18,7 @@ export
     # Types
     AbstractMetadata,
     Description,
+    DictProperty,
     Modality,
     NotProperty,
     NoopMetadata,
@@ -38,8 +39,9 @@ export
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
+include("getter.jl")
+include("setter.jl")
 include("general.jl")
 include("metadata.jl")
-
 
 end

@@ -1,16 +1,4 @@
 #=
-"""
-    @propdoc(T, property) -> String
-"""
-macro propdoc(T, p)
-    pf = Expr(:call, MetadataUtils._property_fields, T)
-    quote
-        @doc $ex
-    end
-end
-=#
-
-#=
     _property_fields(T) -> Tuple{Vararg{Symbol}}
 
 Returns the fields labeled as with any property except `NestedProperty` using
@@ -22,77 +10,141 @@ _property_fields(::Type{T}) where {T} = ()
 function _propertynames(x)
     Base.@_inline_meta
     if has_nested_properties(x)
-        return (_property_fields(x)..., [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...)
+        if has_dictproperty(x)
+            return (_property_fields(x)...,
+                    [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...,
+                    keys(getfield(x, prop2sym(x, DictProperty)))...)
+        else
+            return (_property_fields(x)..., [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...)
+        end
     else
-        return _property_fields(x)
-    end
-end
-function _propertynames(x::AbstractDict{Symbol})
-    Base.@_inline_meta
-    if has_nested_properties(x)
-        return (_property_fields(x)...,
-                [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...,
-                keys(x)...)
-    else
-        return (_property_fields(x)..., keys(x)...)
+        if has_dictproperty(x)
+            return (_property_fields(x)..., keys(getfield(x, prop2sym(x, DictProperty)))...)
+        else
+            return _property_fields(x)
+        end
     end
 end
 _is_nested_properties(x::Symbol) = x === :NestedProperty
+_is_dictproperty(x::Symbol) = (x === :DictProperty) | (x === :dictproperty)
 
-if_exact_eq(x, y, trueout, falseout) = Expr(:if, Expr(:call, :(===), x, y), Expr(:return, trueout), falseout)
+
+function if_exact_eq(x, y, trueout, falseout)
+    return Expr(:if, Expr(:call, :(===), x, y), Expr(:return, trueout), falseout)
+end
+
+
+function _add_elseif!(expr::Expr, x, y, trueout)
+    if expr.head === :if
+        if isempty(expr.args)
+            push!(expr.args, Expr(:call, :(===), x, y), trueout)
+        elseif length(expr.args) == 2
+            push!(expr.args, Expr(:elseif, Expr(:call, :(===), x, y), trueout))
+        else
+            _add_elseif!(expr.args[end], Expr(:call, :(===), x, y), trueout)
+        end
+    elseif expr.head === :elseif
+        if expr.args[end] isa Expr
+            _add_elseif!(expr.args[end], Expr(:call, :(===), x, y), trueout)
+        else
+            push!(expr.args, Expr(:elseif, Expr(:call, :(===), x, y), trueout))
+        end
+    end
+end
+
+function _final_else_return!(expr, r)
+    if expr.head === :if
+        if length(expr.args) == 3
+            _final_else_return!(expr.args[end], r)
+        else
+            push!(expr.args, r)
+        end
+    elseif expr.head === :elseif
+        if length(expr.args) == 3
+            _final_else_return!(expr.args[end], r)
+        else
+            push!(expr.args, r)
+        end
+    end
+end
 
 function _assignprops(ex, kwdefs...)
-    blk_sym2prop = Expr(:return, esc(MetadataUtils.NotProperty))
-    blk_prop2sym = Expr(:return, :nothing)
     s = esc(:s)
     val = esc(:val)
     T = esc(ex)
     p = esc(:p)
     x = esc(:x)
+    S = esc(:Symbol)
+    TYPE = esc(Type)
+    pname = esc(Expr(:., :MetadataUtils, QuoteNode(:propname)))
     nested_fields = Expr(:tuple)
     property_fields = Expr(:tuple)
-    for kwdefs_i in kwdefs
-        field_sym = kwdefs_i.args[2]
-        if field_sym isa Symbol
-            field_sym = QuoteNode(field_sym)
-        elseif !isa(field_sym, QuoteNode)
-            error("assigned field $field_sym must be a Symbol.")
-        end
-
-        if _is_nested_properties(kwdefs_i.args[3])
-            push!(nested_fields.args, field_sym)
-        else
-            field_prop = kwdefs_i.args[3]
-            if field_prop isa Symbol  # is QuoteNode
-                field_prop = esc(field_prop)
-            else
-                error("")
+    _defiend_dictproperty = false
+    if length(kwdefs) === 0
+        blk_sym2prop = Expr(:return, esc(MetadataUtils.NotProperty))
+        blk_prop2sym = Expr(:return, esc(:nothing))
+    else
+        blk_sym2prop = Expr(:if)
+        blk_prop2sym = Expr(:if)
+        for kwdefs_i in kwdefs
+            field_sym = kwdefs_i.args[2]
+            if field_sym isa Symbol
+                field_sym = QuoteNode(field_sym)
+            elseif !isa(field_sym, QuoteNode)
+                error("assigned field $field_sym must be a Symbol.")
             end
-            push!(property_fields.args, :(MetadataUtils.propname($field_prop)))
-            blk_sym2prop = if_exact_eq(s, :(MetadataUtils.propname($field_prop)), field_prop, blk_sym2prop)
-            blk_prop2sym = if_exact_eq(p, field_prop, field_sym, blk_prop2sym)
+
+            if _is_nested_properties(kwdefs_i.args[3])
+                push!(nested_fields.args, field_sym)
+            elseif _is_dictproperty(kwdefs_i.args[3])
+                field_prop = kwdefs_i.args[3]
+                if field_prop isa Symbol  # is QuoteNode
+                    field_prop = esc(field_prop)
+                else
+                    error("")
+                end
+                _defiend_dictproperty = true
+                _add_elseif!(blk_sym2prop, s, :($pname($field_prop)), Expr(:return, field_prop))
+                _add_elseif!(blk_prop2sym, p, field_prop, Expr(:return, field_sym))
+            else
+                field_prop = kwdefs_i.args[3]
+                if field_prop isa Symbol  # is QuoteNode
+                    field_prop = esc(field_prop)
+                else
+                    error("")
+                end
+                push!(property_fields.args, :($pname($field_prop)))
+                _add_elseif!(blk_sym2prop, s, :($pname($field_prop)), Expr(:return, field_prop))
+                _add_elseif!(blk_prop2sym, p, field_prop, Expr(:return, field_sym))
+            end
         end
+        _final_else_return!(blk_sym2prop, Expr(:return, esc(MetadataUtils.NotProperty)))
+        _final_else_return!(blk_prop2sym, Expr(:return, esc(:nothing)))
     end
-    return quote
+    p2s = esc(Expr(:., :MetadataUtils, QuoteNode(:prop2sym)))
+    P2S = Expr(:function, :($p2s(::$TYPE{<:$T}, $p::$(esc(MetadataUtils.Property)))), blk_prop2sym)
+    s2p = esc(Expr(:., :MetadataUtils, QuoteNode(:sym2prop)))
+    S2P = Expr(:function, :($s2p(::$TYPE{<:$T}, $s::$S)), blk_sym2prop)
+    blk = quote
         #MetadataUtils.prop2sym(::Type{<:$T}, $p::MetadataUtils.Property) = $blk_prop2sym
-        function MetadataUtils.prop2sym(::Type{<:$T}, $p::P) where {P<:MetadataUtils.Property}
-            $blk_prop2sym
-        end
+        $P2S
 
-        function MetadataUtils.sym2prop(::Type{<:$T}, $s::Symbol)
-            $blk_sym2prop
-        end
+        $S2P
 
-        MetadataUtils._nested_fields(::Type{<:$T}) = $nested_fields
+        MetadataUtils._nested_fields(::$TYPE{<:$T}) = $nested_fields
 
-        MetadataUtils._property_fields(::Type{<:$T}) = $property_fields
+        MetadataUtils._property_fields(::$TYPE{<:$T}) = $property_fields
 
-        Base.getproperty($x::$T, $s::Symbol) = MetadataUtils._getproperty($x, $s)
+        Base.getproperty($x::$T, $s::$S) = MetadataUtils._getproperty($x, $s2p($T, $s), $s)
 
-        Base.setproperty!($x::$T, $s::Symbol, $val) = MetadataUtils._setproperty!($x, $s, $val)
+        Base.setproperty!($x::$T, $s::$S, $val) = MetadataUtils._setproperty!($x, $s, $val)
 
-        Base.propertynames($x::$T) = MetadataUtils._propertynames(x)
+        Base.propertynames($x::$T) = MetadataUtils._propertynames($x)
     end
+    if _defiend_dictproperty
+        push!(blk.args, :(MetadataUtils.has_dictproperty(::$TYPE{<:$T}) = true))
+    end
+    return blk
 end
 
 

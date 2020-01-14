@@ -23,39 +23,31 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
     setter_docs = create_setter_docs(name, const_name)
     const_name_print = string(const_name.args[1])
     const_name_symbol = QuoteNode(const_name.args[1])
-    blk = quote
+
+    blk1 = quote
         @doc $getter_docs $getter_fxn($x) = MetadataUtils._getproperty($x, $const_name)
 
         @doc $setter_docs $setter_fxn($x, $val) = MetadataUtils._setproperty!($x, $const_name, $val)
+    end
+    blk2 = quote
+        MetadataUtils.propdefault(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $d
 
-        MetadataUtils.propdefault(::Type{MetadataUtils.Property{$sym_name}}, ::Type{C}) where {C} = $d
+        MetadataUtils.proptype(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $t
 
-        MetadataUtils.proptype(::Type{MetadataUtils.Property{$sym_name}}, ::Type{C}) where {C} = $t
-
-        function MetadataUtils.propdoc(::Type{MetadataUtils.Property{$sym_name}})
-            return Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol)))
+        function MetadataUtils.propdoc(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}})
+            return MetadataUtils._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol))))
         end
 
-        function MetadataUtils._show_property(io, ::MetadataUtils.Property{$sym_name})
+        function MetadataUtils._show_property(io, ::MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn})
             print(io, $const_name_print)
         end
 
         function MetadataUtils.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
             return $const_name
         end
-
-        function Base.getproperty(::MetadataUtils.Property{$sym_name}, $s::Symbol)
-            if $s === :getter
-                return $getter_fxn
-            elseif $s === :setter
-                return $setter_fxn
-            else
-                error("type $(P.name) has no field $s")
-            end
-        end
     end
 
-    return :(const $(const_name) = MetadataUtils.Property{$(sym_name)}()), blk
+    return :(const $(const_name) = MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}()), blk1, blk2
 end
 
 _defprop(d, t, name::QuoteNode, const_name::Symbol) = _defprop(d, t, name.value, esc(const_name))
@@ -173,9 +165,10 @@ true
 """
 macro defprop(expr)
     expr = macroexpand(__module__, expr)
-    PropertyConst, blk = _defprop(expr)
+    PropertyConst, blk1, blk2 = _defprop(expr)
     quote
+        $blk1
         Base.@__doc__($(PropertyConst))
-        $blk
+        $blk2
     end
 end
