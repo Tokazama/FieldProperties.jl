@@ -22,6 +22,7 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
     getter_docs = create_getter_docs(name, const_name)
     setter_docs = create_setter_docs(name, const_name)
     const_name_print = string(const_name.args[1])
+    const_name_symbol = QuoteNode(const_name.args[1])
     blk = quote
         @doc $getter_docs $getter_fxn($x) = MetadataUtils._getproperty($x, $const_name)
 
@@ -31,8 +32,16 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
 
         MetadataUtils.proptype(::Type{MetadataUtils.Property{$sym_name}}, ::Type{C}) where {C} = $t
 
+        function MetadataUtils.propdoc(::Type{MetadataUtils.Property{$sym_name}})
+            return Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol)))
+        end
+
         function MetadataUtils._show_property(io, ::MetadataUtils.Property{$sym_name})
             print(io, $const_name_print)
+        end
+
+        function MetadataUtils.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
+            return $const_name
         end
 
         function Base.getproperty(::MetadataUtils.Property{$sym_name}, $s::Symbol)

@@ -35,7 +35,7 @@ Base.length(m::AbstractMetadata) = length(propertynames(m))
 
 Base.getkey(m::AbstractMetadata, k, default) = getkey(subdict(m), k, default)
 
-Base.keys(m::AbstractMetadata) = propertynames(m)
+Base.keys(m::AbstractMetadata) = propertynames(subdict(m))
 
 suppress(m::AbstractMetadata) = get(m, :suppress, ())
 
@@ -75,7 +75,7 @@ end
         return nothing
     else
         p = @inbounds(pnames[state])
-        return Pair(p, getfield(m, p)), state + 1
+        return Pair(p, getproperty(m, p)), state + 1
     end
 end
 

@@ -1,4 +1,16 @@
 #=
+"""
+    @propdoc(T, property) -> String
+"""
+macro propdoc(T, p)
+    pf = Expr(:call, MetadataUtils._property_fields, T)
+    quote
+        @doc $ex
+    end
+end
+=#
+
+#=
     _property_fields(T) -> Tuple{Vararg{Symbol}}
 
 Returns the fields labeled as with any property except `NestedProperty` using
@@ -10,8 +22,7 @@ _property_fields(::Type{T}) where {T} = ()
 function _propertynames(x)
     Base.@_inline_meta
     if has_nested_properties(x)
-        return (_property_fields(x)...,
-                [_property_fields(getfield(x, f)) for f in _nested_fields(x)]...)
+        return (_property_fields(x)..., [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...)
     else
         return _property_fields(x)
     end
@@ -20,7 +31,7 @@ function _propertynames(x::AbstractDict{Symbol})
     Base.@_inline_meta
     if has_nested_properties(x)
         return (_property_fields(x)...,
-                [_property_fields(getfield(x, f)) for f in _nested_fields(x)]...,
+                [_propertynames(getfield(x, f)) for f in _nested_fields(x)]...,
                 keys(x)...)
     else
         return (_property_fields(x)..., keys(x)...)
@@ -31,7 +42,7 @@ _is_nested_properties(x::Symbol) = x === :NestedProperty
 if_exact_eq(x, y, trueout, falseout) = Expr(:if, Expr(:call, :(===), x, y), Expr(:return, trueout), falseout)
 
 function _assignprops(ex, kwdefs...)
-    blk_sym2prop = Expr(:return, esc(FieldProperties.NotProperty))
+    blk_sym2prop = Expr(:return, esc(MetadataUtils.NotProperty))
     blk_prop2sym = Expr(:return, :nothing)
     s = esc(:s)
     val = esc(:val)
@@ -57,26 +68,30 @@ function _assignprops(ex, kwdefs...)
             else
                 error("")
             end
-            push!(property_fields.args, :(FieldProperties.propname($field_prop)))
-            blk_sym2prop = if_exact_eq(s, :(FieldProperties.propname($field_prop)), field_prop, blk_sym2prop)
+            push!(property_fields.args, :(MetadataUtils.propname($field_prop)))
+            blk_sym2prop = if_exact_eq(s, :(MetadataUtils.propname($field_prop)), field_prop, blk_sym2prop)
             blk_prop2sym = if_exact_eq(p, field_prop, field_sym, blk_prop2sym)
         end
     end
     return quote
-        #FieldProperties.prop2sym(::Type{<:$T}, $p::FieldProperties.Property) = $blk_prop2sym
-        FieldProperties.prop2sym(::Type{<:$T}, $p::P) where {P<:FieldProperties.Property} = $blk_prop2sym
+        #MetadataUtils.prop2sym(::Type{<:$T}, $p::MetadataUtils.Property) = $blk_prop2sym
+        function MetadataUtils.prop2sym(::Type{<:$T}, $p::P) where {P<:MetadataUtils.Property}
+            $blk_prop2sym
+        end
 
-        FieldProperties.sym2prop(::Type{<:$T}, $s::Symbol) = $blk_sym2prop
+        function MetadataUtils.sym2prop(::Type{<:$T}, $s::Symbol)
+            $blk_sym2prop
+        end
 
-        FieldProperties._nested_fields(::Type{<:$T}) = $nested_fields
+        MetadataUtils._nested_fields(::Type{<:$T}) = $nested_fields
 
-        FieldProperties._property_fields(::Type{<:$T}) = $property_fields
+        MetadataUtils._property_fields(::Type{<:$T}) = $property_fields
 
-        Base.getproperty($x::$T, $s::Symbol) = FieldProperties._getproperty($x, $s)
+        Base.getproperty($x::$T, $s::Symbol) = MetadataUtils._getproperty($x, $s)
 
-        Base.setproperty!($x::$T, $s::Symbol, $val) = FieldProperties._setproperty!($x, $s, $val)
+        Base.setproperty!($x::$T, $s::Symbol, $val) = MetadataUtils._setproperty!($x, $s, $val)
 
-        Base.propertynames($x::$T) = FieldProperties._propertynames(x)
+        Base.propertynames($x::$T) = MetadataUtils._propertynames(x)
     end
 end
 

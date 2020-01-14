@@ -17,10 +17,13 @@ using Markdown
 export
     # Types
     AbstractMetadata,
-    Property,
+    Description,
+    Modality,
     NotProperty,
     NoopMetadata,
     NestedProperty,
+    Property,
+    Status,
     # Macros
     @defprop,
     @assignprops,
@@ -35,6 +38,8 @@ export
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
+include("general.jl")
 include("metadata.jl")
+
 
 end
