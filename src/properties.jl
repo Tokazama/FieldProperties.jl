@@ -19,9 +19,9 @@ _show_property(io, ::Property{name}) where {name} = print(io, "Property(:$name)"
 
 function Base.getproperty(p::Property{name,G,S}, s::Symbol) where {name,G,S}
     if s === :setter
-        return G
-    elseif s === :getter
         return S
+    elseif s === :getter
+        return G
     else
         error("type $name has no field $s")
     end
@@ -60,6 +60,7 @@ propdefault(::Type{P}, ::Type{C}) where {P,C} = nothing
 Return the appropriate type for property `p` given `context`. This method allows
 unique type restrictions given different types for `context`.
 """
+proptype(::P) where {P} = proptype(P, Nothing)
 proptype(::P, context::C) where {P,C} = proptype(P, C)
 proptype(::P, ::Type{C}) where {P,C} = proptype(P, C)
 proptype(::Type{P}, context::C) where {P,C} = proptype(P, C)

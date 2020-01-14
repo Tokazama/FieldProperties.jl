@@ -39,5 +39,3 @@ end
 
     @test_throws ErrorException("type MyProperties does not have property bar") getproperty(m, :bar)
 end
-
-
