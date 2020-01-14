@@ -73,15 +73,21 @@ Ensures the `v` is the appropriate type for property `p` given `x`. If it isn't
 then `propconvert` attempts to convert to the "correct type". The "correct type"
 is determined by `proptype(p, x)`.
 """
-@inline function propconvert(x, p::Property, v)
-    return propconvert(x, p, proptype(p, x), v)
-end
-propconvert(x, s::Symbol, v) = propconvert(x, sym2prop(x, s), v)
+propconvert(x, s::Symbol, v) = propconvert(x, sym2prop(x, s), s, v)
+propconvert(x, p::Property, v) = propconvert(x, p, prop2sym(x, p), v)
+propconvert(x, p, s, v) = propconvert(x, p, s, proptype(x, p), v)
+propconvert(x, p, s, ::Type{T}, v::V) where {T,V<:T} = v
+propconvert(x, p, s, ::Type{T}, v::V) where {T,V} = convert(T, v)
+propconvert(x, p, s, ::Type{T}, ::Property{:not_property}) where {T} = error("type $(typeof(x).name) does not have property $s")
+#=
+propconvert(x, s::Symbol, v) = propconvert(x, sym2prop(x, s), s, v)
+
 propconvert(x, p::Property, ::Type{T}, v::V) where {T,V<:T} = v
 propconvert(x, p::Property, ::Type{T}, v::V) where {T,V} = convert(T, v)
 function propconvert(x, p::Property, ::Type{T}, ::Property{:not_property}) where {T}
     error("type $(typeof(x).name) does not have property $(propname(p))")
 end
+=#
 
 """
     propdoc(x)
@@ -151,9 +157,8 @@ has_dictproperty(::T) where {T} = has_dictproperty(T)
 has_dictproperty(::Type{T}) where {T} = false
 
 """
-    NotProperty
-
-Indicator for the absence of a property.
+Indicates the absence of a property.
 """
 @defprop NotProperty{:not_property}
 
+NotPropertyType = typeof(NotProperty)

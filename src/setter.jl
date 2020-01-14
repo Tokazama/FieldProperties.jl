@@ -1,6 +1,6 @@
-_setproperty!(x, s::Symbol, val) = __setproperty!(x, sym2prop(x, s), s, val)
-_setproperty!(x, p::Property, val) = __setproperty!(x, p, prop2sym(x, p), val)
-__setproperty!(x, p, s, val) = setter!(x, p, s, propconvert(x, p, val), true)
+_setproperty!(x, s::Symbol, val) = _setproperty!(x, sym2prop(x, s), s, val)
+_setproperty!(x, p::Property, val) = _setproperty!(x, p, prop2sym(x, p), val)
+_setproperty!(x, p, s, val) = (setter!(x, p, s, propconvert(x, p, val), true); return x)
 
 #=
     setter!(x, p::Property, s::Symbol, val)
@@ -16,7 +16,7 @@ __setproperty!(x, p, s, val) = setter!(x, p, s, propconvert(x, p, val), true)
 
 # need to run sym2prop one more time in case property is mapped to field with different name
 setter!(x, p::Property, s::Symbol, val, toplevel::Bool) = setfield!(x, prop2sym(x, p), val)
-function setter!(x, p::Property{nothing}, s::Symbol, val, toplevel::Bool)
+function setter!(x, p::NotPropertyType, s::Symbol, val, toplevel::Bool)
     Base.@_inline_meta
     if has_nested_properties(x)
         for f in _nested_fields(x)

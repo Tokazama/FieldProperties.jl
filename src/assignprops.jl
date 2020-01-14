@@ -137,7 +137,7 @@ function _assignprops(ex, kwdefs...)
 
         Base.getproperty($x::$T, $s::$S) = MetadataUtils._getproperty($x, $s2p($T, $s), $s)
 
-        Base.setproperty!($x::$T, $s::$S, $val) = MetadataUtils._setproperty!($x, $s, $val)
+        Base.setproperty!($x::$T, $s::$S, $val) = MetadataUtils._setproperty!($x, $s2p($T, $s), $s, $val)
 
         Base.propertynames($x::$T) = MetadataUtils._propertynames($x)
     end
