@@ -29,6 +29,8 @@ end
 
 """
     property(x) -> Property
+
+Given a setter or getter function returns the corresponding property.
 """
 property(::T) where {T} = property(T)
 property(p::Property) = p
@@ -36,7 +38,9 @@ property(::Type{T}) where {T} = NotProperty
 property(::Type{T}) where {T<:Property} = T()
 
 """
-    propname(::T) -> Symbol
+    propname(::Property) -> Symbol
+
+Returns the symbolic name of a propety.
 """
 propname(::P) where {P} = propname(P)
 propname(::Type{<:Property{name}}) where {name} = name
@@ -109,7 +113,10 @@ function propdoc(::T) where {T}
 end
 
 """
-    prop2sym(x, property) -> Symbol
+    prop2sym(x, p) -> Symbol
+
+Given the `x` and property `p` returns the corresponding symbol. If no
+corresponding symbol is found then `nothing` is returned.
 """
 @inline prop2sym(::T, p::P) where {T,P} = prop2sym(T, property(P))
 prop2sym(::T, ::Type{P}) where {T,P} = prop2sym(T, P)
@@ -119,6 +126,9 @@ prop2sym(::Type{T}, ::Type{P}) where {T,P<:Property} = nothing
 
 """
     sym2prop(x, sym) -> Property
+
+Given the `x` and symbol `sym` returns the corresponding property. If no
+corresponding property is found then `NoProperty` is returned.
 """
 sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 

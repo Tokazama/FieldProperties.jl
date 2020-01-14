@@ -3,7 +3,7 @@ using MetadataUtils, Test
 using MetadataUtils: description, description!
 
 mutable struct MyProperties{M} <: AbstractMetadata{M}
-    my_definition::String
+    my_description::String
     my_properties::M
 end
 
@@ -11,7 +11,7 @@ MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
 
 @assignprops(
     MyProperties,
-    :my_definition => Description,
+    :my_description => Description,
     :my_properties => DictProperty)
 
 m = MyProperties("", Dict{Symbol,Any}())

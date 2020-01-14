@@ -9,7 +9,7 @@ ImageProperties is aimed at improving  properties in the `JuliaImage` ecosystem.
 3. Optimization: It should be possible to optimize performance of accessing and setting properties without violating the first 2 goals.
 
 
-## Usage
+## Creating Properties
 
 Properties can be defined with varying degrees of specificity.
 ```julia
@@ -95,4 +95,54 @@ true
 
 julia> Property4.setter == prop4!
 true
+```
+
+## Creating That Contain Properties
+
+Although properties can be used flexibly with different structures, it may be easier to take advantage of the provided `AbstractMetadata` type. In the following example we take advantage of the `Description` and `DictProperty`. These provide a method of describing a structure and an extensible pool for storing an arbitrary number of properties.
+
+```julia
+julia> mutable struct MyProperties{M} <: AbstractMetadata{M}
+           my_description::String
+           my_properties::M
+       end
+
+# tells other functions where to find the dictionary so there's support for dictionary methods
+julia> MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
+```
+
+Binding `Description` and `DictProperty` to specific fields is accomplished through `@assignprops`. Several other methods specific to `MyProperties` are created to provide property like behavior. Most notably, the methods from base overwritten are `getproperty`, `setproperty!`, and `propertynames`.
+```julia
+julia> @assignprops(
+           MyProperties,
+           :my_description => Description,
+           :my_properties => DictProperty)
+
+julia> m = MyProperties("", Dict{Symbol,Any}())
+MyProperties{Dict{Symbol,Any}} with 1 entry
+    description:
+
+julia> propertynames(m)
+(:description,)
+```
+
+```julia
+julia> MetadataUtils.description(m)
+""
+
+julia> MetadataUtils.description!(m, "foo")
+MyProperties{Dict{Symbol,Any}} with 1 entry
+    description: foo
+
+julia> MetadataUtils.description(m)
+"foo"
+
+julia> m.description = "bar"
+"bar"
+
+julia> MetadataUtils.description(m)
+"bar"
+
+julia> m.description
+"bar"
 ```
