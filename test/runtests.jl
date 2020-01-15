@@ -7,12 +7,10 @@ mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_properties::M
 end
 
-MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
-
 @assignprops(
     MyProperties,
     :my_description => Description,
-    :my_properties => DictProperty)
+    :my_properties => DictExtension)
 
 m = MyProperties("", Dict{Symbol,Any}())
 
@@ -50,7 +48,7 @@ end
     @test @inferred(encapsulated_getproperty(m)) == "bar"
 end
 
-@testset "@property DictProperty{:dictproperty}::AbstractDict{Symbol}" begin
+@testset "@property DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
     # Note: we don't have specifiers on these so we can't expect inferrible types
     m.foo = ""
     @test m.foo == ""
@@ -60,10 +58,35 @@ end
 
 @defprop CalibrationMaximum{:calmax}
 MetadataUtils.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
-MetadataUtils.proptype(::CalibrationMaximumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+MetadataUtils.proptype(::Type{CalibrationMaximumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
 
-@testset "propdefault" begin
-    A = rand(2,2)
-    @test calmax(A) == maximum(A)
+@defprop CalibrationMinimum{:calmin}
+MetadataUtils.propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
+MetadataUtils.proptype(::Type{CalibrationMinimumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+
+struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
+    _parent::P
+    my_properties::M
 end
+Base.parent(m::MyArray) = getfield(m, :_parent)
+Base.size(m::MyArray) = size(parent(m))
+Base.maximum(m::MyArray) = maximum(parent(m))
+Base.minimum(m::MyArray) = minimum(parent(m))
 
+
+@assignprops(
+    MyArray,
+    :my_properties => DictExtension(CalibrationMaximum,CalibrationMinimum))
+
+@testset "Optional properties" begin
+    A = MyArray(rand(4,4), Dict{Symbol,Any}());
+
+    @test calmax(A) == maximum(A)
+    @test A.calmax == maximum(A)
+
+    new_calmax = Float32((maximum(A) - minimum(A)) / 2)
+    A.calmax = new_calmax
+    @test A.calmax == new_calmax
+    @test A.calmax isa eltype(A)
+    @test calmax(A) == new_calmax
+end

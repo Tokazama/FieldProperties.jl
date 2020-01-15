@@ -18,7 +18,7 @@ export
     # Types
     AbstractMetadata,
     Description,
-    DictProperty,
+    DictExtension,
     Modality,
     NotProperty,
     NoopMetadata,
@@ -29,6 +29,7 @@ export
     @defprop,
     @assignprops,
     # methods
+    dictextension,
     propconvert,
     propdefault,
     propdoc,
@@ -39,6 +40,8 @@ export
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
+include("dictextension.jl")
+include("nested_properties.jl")
 include("getter.jl")
 include("setter.jl")
 include("general.jl")

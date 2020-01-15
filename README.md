@@ -1,14 +1,24 @@
 # MetadataUtils.jl
 [![Build Status](https://travis-ci.com/Tokazama/MetadataUtils.jl.svg?branch=master)](https://travis-ci.com/Tokazama/MetadataUtils.jl)
 
-## Goals
+## Introduction
 
-ImageProperties is aimed at improving  properties in the `JuliaImage` ecosystem. Although this is currently aimed at integration with `ImageMetadata` the code here could easily be lifted and placed in most other structures to provide similar functionality. I've tried to consider these goals while creating this:
+Herein the term "properties" is used to refer to any single piece of data that is stored within another structure and "metadata" refers to the entire collection of properties that belongs to a structure. Some additional characteristics of properties (according to the definition used in this package) are:
+
+* They are not necessarily known at compile time (much like the elements of an array or values in a dictionary)
+* They carry semantic meaning that may be shared across structures (similar to `eltype` or `ndims` for arrays)
+* They may have different characteristic in different contexts (mutable/immutable in certain structures or even optionally defined)
+
+This package was created while trying to balance the following goals:
 
 1. Extensibility: Easy for developers to add new properties while using those previously defined
 2. Usability: It shouldn't make it harder for users to access or interact with properties.
 3. Optimization: It should be possible to optimize performance of accessing and setting properties without violating the first 2 goals.
 
+
+[ImageMetadata.jl](https://github.com/JuliaImages/ImageMetadata.jl), [MetadataArrays.jl](https://github.com/piever/MetadataArrays.jl), and [MetaGraph.jl](https://github.com/JuliaGraphs/MetaGraphs.jl) are just a few packages that provide a way of adding metadata to array or graph structures. [FieldMetadata.jl](https://github.com/rafaqz/FieldMetadata.jl) allows creating methods that produce "metadata" at each field of a structure. These packages provide similar functionality but have little overlap in the core functionality used here. Therefore, this package may be seen as complementary to these.
+
+There are some packages that have significant overlap with MetadataUtils. [MacroTools.jl](https://github.com/MikeInnes/MacroTools.jl) provides `@forward` which conveniently maps method definitions to specific fields of structures. This overlaps with a great deal of what `@assignprops` does. However, `@forward` is strictly for methods (not properties) and there are some [benefits](#creating-structures-that-contain-properties) to using `@assignprops`. There are many packages aimed at metaprogramming that appear to have very similar utilities. However, MetadataUtils was created because none of them appeared to accomplish all the previously mentioned goals and there wasn't a clear path forward in using them together to accomplish those goals.
 
 ## Creating Properties
 
@@ -100,7 +110,7 @@ true
 
 ## Creating Structures That Contain Properties
 
-Although properties can be used flexibly with different structures, it may be easier to take advantage of the provided `AbstractMetadata` type. In the following example we take advantage of the `Description` and `DictProperty`. These provide a method of describing a structure and an extensible pool for storing an arbitrary number of properties.
+Although properties can be used flexibly with different structures, it may be easier to take advantage of the provided `AbstractMetadata` type. In the following example we take advantage of the `Description` and `DictExtension`. These provide a method of describing a structure and an extensible pool for storing an arbitrary number of properties.
 
 ```julia
 julia> mutable struct MyProperties{M} <: AbstractMetadata{M}
@@ -112,12 +122,12 @@ julia> mutable struct MyProperties{M} <: AbstractMetadata{M}
 julia> MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
 ```
 
-Binding `Description` and `DictProperty` to specific fields is accomplished through `@assignprops`. Several other methods specific to `MyProperties` are created to provide property like behavior. Most notably, the methods from base overwritten are `getproperty`, `setproperty!`, and `propertynames`.
+Binding `Description` and `DictExtension` to specific fields is accomplished through `@assignprops`. Several other methods specific to `MyProperties` are created to provide property like behavior. Most notably, the methods from base overwritten are `getproperty`, `setproperty!`, and `propertynames`.
 ```julia
 julia> @assignprops(
            MyProperties,
            :my_description => Description,
-           :my_properties => DictProperty)
+           :my_properties => DictExtension)
 
 julia> m = MyProperties("", Dict{Symbol,Any}())
 MyProperties{Dict{Symbol,Any}} with 1 entry
@@ -146,4 +156,36 @@ julia> MetadataUtils.description(m)
 
 julia> m.description
 "bar"
+```
+
+Optional properties can be assigned to the `DictExtension` using the `DictExtension(Propert1, Property2)` syntax.
+```julia
+julia> @defprop CalibrationMaximum{:calmax}
+
+julia> MetadataUtils.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
+
+julia> MetadataUtils.proptype(::CalibrationMaximumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+
+julia> @defprop CalibrationMinimum{:calmin}
+
+julia> MetadataUtils.propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
+
+julia> MetadataUtils.proptype(::CalibrationMinimumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+
+julia> struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
+           _parent::P
+           my_properties::M
+       end
+
+julia> Base.parent(m::MyArray) = getfield(m, :_parent)
+
+julia> Base.size(m::MyArray) = size(parent(m))
+
+julia> Base.maximum(m::MyArray) = maximum(parent(m))
+
+julia> Base.minimum(m::MyArray) = minimum(parent(m))
+
+julia> @assignprops(
+           MyArray,
+           :my_properties => DictExtension(CalibrationMaximum,CalibrationMinimum))
 ```

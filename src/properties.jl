@@ -79,7 +79,7 @@ then `propconvert` attempts to convert to the "correct type". The "correct type"
 is determined by `proptype(p, x)`.
 """
 propconvert(p::Property, v) = propconvert(x, p, propnam(p), v)
-propconvert(p::Property, v, x) = propconvert(x, p, prop2sym(x, p), v, x)
+propconvert(p::Property, v, x) = propconvert(x, p, prop2field(x, p), v, x)
 propconvert(p, s, v) = _propconvert(p, s, v, proptype(p))
 propconvert(p, s, v, x) = _propconvert(p, s, v, proptype(p, x))
 _propconvert(p, s, v::V, ::Type{T}) where {T,V<:T} = v
@@ -104,16 +104,17 @@ function propdoc(::T) where {T}
 end
 
 """
-    prop2sym(x, p) -> Symbol
+    prop2field(x, p) -> Symbol
 
-Given the `x` and property `p` returns the corresponding symbol. If no
-corresponding symbol is found then `nothing` is returned.
+Given the `x` and property `p` returns the symbol corresponding to the field
+where the property is stored in `x`. If no corresponding symbol is found then
+`nothing` is returned.
 """
-@inline prop2sym(::T, p::P) where {T,P} = prop2sym(T, property(P))
-prop2sym(::T, ::Type{P}) where {T,P} = prop2sym(T, P)
-prop2sym(::Type{T}, ::P) where {T,P} = prop2sym(T, P)
-prop2sym(::Type{T}, ::Type{P}) where {T,P} = prop2sym(C, property(P))
-prop2sym(::Type{T}, ::Type{P}) where {T,P<:Property} = nothing
+@inline prop2field(::T, p::P) where {T,P} = prop2field(T, property(P))
+prop2field(::T, ::Type{P}) where {T,P} = prop2field(T, P)
+prop2field(::Type{T}, ::P) where {T,P} = prop2field(T, P)
+prop2field(::Type{T}, ::Type{P}) where {T,P} = prop2field(C, property(P))
+prop2field(::Type{T}, ::Type{P}) where {T,P<:Property} = nothing
 
 """
     sym2prop(x, sym) -> Property
@@ -124,41 +125,7 @@ corresponding property is found then `NoProperty` is returned.
 sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 
 """
-Indicator for a field containing properties nested within a structure.
-"""
-@defprop NestedProperty{:nested_property}
-
-#=
-    _nested_fields(T) -> Tuple{Vararg{Symbol}}
-Returns the fields labeled as `NestedProperty` using `@assignprops`
-=#
-_nested_fields(::T) where {T} = _nested_fields(T)
-_nested_fields(::Type{T}) where {T} = ()
-
-"""
-    has_nested_properties(::T) -> Bool
-
-Returns `true` if `T` has fields that contain nested properties.
-"""
-@inline has_nested_properties(::T) where {T} = has_nested_properties(T)
-@inline has_nested_properties(::Type{T}) where {T} = _has_nested_properties(_nested_fields(T))
-_has_nested_properties(::Tuple{}) = false
-_has_nested_properties(::Tuple{Vararg{Symbol}}) = true
-
-"""
-Dictionary that flexibly extends capacity to store properties.
-"""
-@defprop DictProperty{:dictproperties}::AbstractDict{Symbol}
-
-"""
-    has_dictproperties(::T) -> Bool
-
-Returns `true` if `T` has fields that containing extensible dictionary of properties.
-"""
-has_dictproperty(::T) where {T} = has_dictproperty(T)
-has_dictproperty(::Type{T}) where {T} = false
-
-"""
 Indicates the absence of a property.
 """
 @defprop NotProperty{:not_property}=NotProperty
+

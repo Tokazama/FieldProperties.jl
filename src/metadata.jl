@@ -4,38 +4,38 @@
 abstract type AbstractMetadata{D<:AbstractDict{Symbol,Any}} <: AbstractDict{Symbol,Any} end
 
 """
-    subdict
+    dictextension
 """
-function subdict end
+function dictextension end
 
-Base.empty!(m::AbstractMetadata) = empty!(subdict(m))
+Base.empty!(m::AbstractMetadata) = empty!(dictextension(m))
 
-Base.get(m::AbstractMetadata, k, default) = get(subdict(m), k, default)
+Base.get(m::AbstractMetadata, k, default) = get(dictextension(m), k, default)
 
-Base.get!(m::AbstractMetadata, k, default) = get!(subdict(m), k, default)
+Base.get!(m::AbstractMetadata, k, default) = get!(dictextension(m), k, default)
 
 # TODO
 #Base.in(k, m::AbstractMetadata) = in(k, propname(m))
 
-#Base.pop!(m::AbstractMetadata, k) = pop!(subdict(m), k)
+#Base.pop!(m::AbstractMetadata, k) = pop!(dictextension(m), k)
 
-#Base.pop!(m::AbstractMetadata, k, default) = pop!(subdict(m), k, default)
+#Base.pop!(m::AbstractMetadata, k, default) = pop!(dictextension(m), k, default)
 
-Base.isempty(m::AbstractMetadata) = isempty(subdict(m))
+Base.isempty(m::AbstractMetadata) = isempty(dictextension(m))
 
-Base.delete!(m::AbstractMetadata, k) = delete!(subdict(m), k)
+Base.delete!(m::AbstractMetadata, k) = delete!(dictextension(m), k)
 
-@inline Base.getindex(x::AbstractMetadata, s::Symbol) = getindex(subdict(x), s)
+@inline Base.getindex(x::AbstractMetadata, s::Symbol) = getindex(dictextension(x), s)
 
 @inline function Base.setindex!(x::AbstractMetadata, val, s::Symbol)
-    return setindex!(subdict(x), val, s)
+    return setindex!(dictextension(x), val, s)
 end
 
 Base.length(m::AbstractMetadata) = length(propertynames(m))
 
-Base.getkey(m::AbstractMetadata, k, default) = getkey(subdict(m), k, default)
+Base.getkey(m::AbstractMetadata, k, default) = getkey(dictextension(m), k, default)
 
-Base.keys(m::AbstractMetadata) = propertynames(subdict(m))
+Base.keys(m::AbstractMetadata) = propertynames(dictextension(m))
 
 suppress(m::AbstractMetadata) = get(m, :suppress, ())
 
@@ -56,8 +56,8 @@ end
 function Base.iterate(m::AbstractMetadata, state=1)
     out = iterate_struct(m, state)
     if isnothing(out)
-        np = length(_property_fields(m))
-        out = iterate(subdict(m), state - np)
+        np = length(assigned_properties(m))
+        out = iterate(dictextension(m), state - np)
         if isnothing(out)
             return nothing
         else
@@ -70,7 +70,7 @@ function Base.iterate(m::AbstractMetadata, state=1)
 end
 
 @inline function iterate_struct(m::AbstractMetadata, state = 1)
-    pnames = _property_fields(m)
+    pnames = assigned_properties(m)
     if state > length(pnames)
         return nothing
     else
