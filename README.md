@@ -1,4 +1,5 @@
 # MetadataUtils.jl
+[![Build Status](https://travis-ci.com/Tokazama/MetadataUtils.jl.svg?branch=master)](https://travis-ci.com/Tokazama/MetadataUtils.jl)
 
 ## Goals
 
@@ -97,7 +98,7 @@ julia> Property4.setter == prop4!
 true
 ```
 
-## Creating That Contain Properties
+## Creating Structures That Contain Properties
 
 Although properties can be used flexibly with different structures, it may be easier to take advantage of the provided `AbstractMetadata` type. In the following example we take advantage of the `Description` and `DictProperty`. These provide a method of describing a structure and an extensible pool for storing an arbitrary number of properties.
 

@@ -39,3 +39,13 @@ end
 
     @test_throws ErrorException("type MyProperties does not have property bar") getproperty(m, :bar)
 end
+
+@defprop CalibrationMaximum{:calmax}
+MetadataUtils.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
+MetadataUtils.proptype(::CalibrationMaximumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+
+@testset "propdefault" begin
+    A = rand(2,2)
+    @test calmax(A) == maximum(A)
+end
+

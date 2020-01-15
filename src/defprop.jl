@@ -24,10 +24,14 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
     const_name_print = string(const_name.args[1])
     const_name_symbol = QuoteNode(const_name.args[1])
 
+    const_type = esc(Symbol(const_name.args[1], :Type))
+
     blk1 = quote
         @doc $getter_docs $getter_fxn($x) = MetadataUtils._getproperty($x, $const_name)
 
         @doc $setter_docs $setter_fxn($x, $val) = MetadataUtils._setproperty!($x, $const_name, $val)
+
+        const $const_type =  MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}
     end
     blk2 = quote
         MetadataUtils.propdefault(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $d
@@ -47,7 +51,7 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
         end
     end
 
-    return :(const $(const_name) = MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}()), blk1, blk2
+    return :(const $(const_name) = $const_type()), blk1, blk2
 end
 
 _defprop(d, t, name::QuoteNode, const_name::Symbol) = _defprop(d, t, name.value, esc(const_name))

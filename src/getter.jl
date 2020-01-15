@@ -3,8 +3,23 @@ function _getproperty(x::T, s::Symbol) where {T}
     Base.@_inline_meta
     return _getproperty(x, sym2prop(T, s), s)
 end
-_getproperty(x::T, p::Property) where {T} = _getproperty(x, p, prop2sym(T, p))
-_getproperty(x, p, s)  where {T} = propconvert(x, p, s, getter(x, p, s))
+function _getproperty(x::T, p::Property) where {T}
+    Base.@_inline_meta
+    return _getproperty(x, p, prop2sym(T, p))
+end
+
+function _getproperty(x, p, s)  where {T} 
+    Base.@_inline_meta
+    return __getproperty(x, p, s, getter(x, p, s))
+end
+
+# last level of indirection checks if there are any defaults
+__getproperty(x, p, s, v::NotPropertyType) = ___getproperty(x, p, s, propdefault(p, x))
+__getproperty(x, p, s, v) = propconvert(p, s, v, x)
+function ___getproperty(x, p, s, v::NotPropertyType)
+    error("type $(typeof(x).name) does not have property $s")
+end
+___getproperty(x, p, s, v) = propconvert(p, s, v, x)
 
 """
     getter(x, p)

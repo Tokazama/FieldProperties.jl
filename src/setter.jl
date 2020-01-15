@@ -1,6 +1,9 @@
 _setproperty!(x, s::Symbol, val) = _setproperty!(x, sym2prop(x, s), s, val)
 _setproperty!(x, p::Property, val) = _setproperty!(x, p, prop2sym(x, p), val)
-_setproperty!(x, p, s, val) = (setter!(x, p, s, propconvert(x, p, val), true); return x)
+function _setproperty!(x, p, s, val)
+    setter!(x, p, s, propconvert(x, p, val), true)
+    return x
+end
 
 #=
     setter!(x, p::Property, s::Symbol, val)
@@ -41,7 +44,8 @@ function setter!(x, p::Property, s::Nothing, val, toplevel::Bool)
     elseif has_dictproperty(x)
         setindex!(getfield(x, prop2sym(x, DictProperty)), val, propname(p))
         out = true
-    end
+    else
         out = false
+    end
     return out
 end

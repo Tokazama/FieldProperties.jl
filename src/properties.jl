@@ -8,8 +8,6 @@ See [`@defprop`](@ref), [`@assignprops`](@ref)
 """
 struct Property{name,G,S} end
 
-Property(name) = Property{name}()
-
 Base.propertynames(::Property) = (:getter, :setter)
 
 Base.show(io::IO, p::Property) = _show_property(io, p)
@@ -52,11 +50,9 @@ _propname(::Type{F}, ::Property{name}) where {F<:Function,name} = name
 """
     propdefault(property, context)
 """
-propdefault(::P, context::C=nothing) where {P,C} = propdefault(P, C)
-propdefault(::P, ::Type{C}) where {P,C} = propdefault(P, C)
-propdefault(::Type{P}, context::C=nothing) where {P,C} = propdefault(P, C)
-propdefault(::Type{P}, ::Type{C}) where {P<:Property,C} = propdefault(property(P), C)
-propdefault(::Type{P}, ::Type{C}) where {P,C} = nothing
+propdefault(property::P) where {P} = propdefault(property, NotProperty)
+propdefault(property::P, context::C) where {P,C} = propdefault(P, C)
+propdefault(property::P, ::Type{C}) where {P,C} = propdefault(P, C)
 
 """
     proptype(p[, context]) -> Type
@@ -72,27 +68,19 @@ proptype(::Type{P}, ::Type{C}) where {P,C} = proptype(property(P), C)
 proptype(::Type{P}, ::Type{C}) where {P<:Property,C} = Any
 
 """
-    propconvert(x, p, v)
+    propconvert(p, v[, context])
+    propconvert(p, s, v[, context])
 
 Ensures the `v` is the appropriate type for property `p` given `x`. If it isn't
 then `propconvert` attempts to convert to the "correct type". The "correct type"
 is determined by `proptype(p, x)`.
 """
-propconvert(x, s::Symbol, v) = propconvert(x, sym2prop(x, s), s, v)
-propconvert(x, p::Property, v) = propconvert(x, p, prop2sym(x, p), v)
-propconvert(x, p, s, v) = propconvert(x, p, s, proptype(x, p), v)
-propconvert(x, p, s, ::Type{T}, v::V) where {T,V<:T} = v
-propconvert(x, p, s, ::Type{T}, v::V) where {T,V} = convert(T, v)
-propconvert(x, p, s, ::Type{T}, ::Property{:not_property}) where {T} = error("type $(typeof(x).name) does not have property $s")
-#=
-propconvert(x, s::Symbol, v) = propconvert(x, sym2prop(x, s), s, v)
-
-propconvert(x, p::Property, ::Type{T}, v::V) where {T,V<:T} = v
-propconvert(x, p::Property, ::Type{T}, v::V) where {T,V} = convert(T, v)
-function propconvert(x, p::Property, ::Type{T}, ::Property{:not_property}) where {T}
-    error("type $(typeof(x).name) does not have property $(propname(p))")
-end
-=#
+propconvert(p::Property, v) = propconvert(x, p, propnam(p), v)
+propconvert(p::Property, v, x) = propconvert(x, p, prop2sym(x, p), v, x)
+propconvert(p, s, v) = _propconvert(p, s, v, proptype(p))
+propconvert(p, s, v, x) = _propconvert(p, s, v, proptype(p, x))
+_propconvert(p, s, v::V, ::Type{T}) where {T,V<:T} = v
+_propconvert(p, s, v::V, ::Type{T}) where {T,V} = convert(T, v)
 
 """
     propdoc(x)
@@ -171,5 +159,3 @@ has_dictproperty(::Type{T}) where {T} = false
 Indicates the absence of a property.
 """
 @defprop NotProperty{:not_property}
-
-NotPropertyType = typeof(NotProperty)
