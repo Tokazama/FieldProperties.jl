@@ -16,6 +16,24 @@ MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
 
 m = MyProperties("", Dict{Symbol,Any}())
 
+@testset "Property interface" begin
+    @test getproperty(Description, :getter) == description
+    @test getproperty(Description, :setter) == description!
+    @test_throws ErrorException getproperty(Description, :bar)
+
+    @test propertynames(Description) == (:getter, :setter)
+
+    @test property(Description) == Description
+    @test property(description) == Description
+    @test property(description!) == Description
+
+    @test propname(Description) == :description
+    @test propname(description) == :description
+
+    @test propdefault(description) == NotProperty
+    @test proptype(description) <: String
+end
+
 @testset "@property Description{:description}::String" begin
     encapsulated_getproperty(x) = getproperty(x, :description)
 

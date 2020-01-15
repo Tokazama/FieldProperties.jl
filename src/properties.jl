@@ -50,9 +50,12 @@ _propname(::Type{F}, ::Property{name}) where {F<:Function,name} = name
 """
     propdefault(property, context)
 """
-propdefault(property::P) where {P} = propdefault(property, NotProperty)
-propdefault(property::P, context::C) where {P,C} = propdefault(P, C)
-propdefault(property::P, ::Type{C}) where {P,C} = propdefault(P, C)
+propdefault(p::P) where {P} = propdefault(p, NotProperty)
+propdefault(p::P, context::C) where {P,C} = propdefault(property(p), C)
+propdefault(p::P, context::C) where {P<:Property,C} = propdefault(P, C)
+propdefault(p::P, ::Type{C}) where {P,C} = propdefault(property(p), C)
+propdefault(p::P, ::Type{C}) where {P<:Property,C} = propdefault(P, C)
+
 
 """
     proptype(p[, context]) -> Type
@@ -158,4 +161,4 @@ has_dictproperty(::Type{T}) where {T} = false
 """
 Indicates the absence of a property.
 """
-@defprop NotProperty{:not_property}
+@defprop NotProperty{:not_property}=NotProperty
