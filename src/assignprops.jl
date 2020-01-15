@@ -153,20 +153,11 @@ function _assignprops(expr, fields...)
     return blk
 end
 
-
 """
     @assignprops
 
-## Searching For Properties in Structures
-
-The `@assignprops` macro alters behavior by:
-
-1. Only considering fields specifically assigned by the `@assignprops` macro as properties
-2. Permits arbitrarily nested properties by recursively searching through fields marked as `NestedProperty`
-3. If the structure is a dictionary with symbol keys then all key-values are considered properties. This permits nested proeprties to serve as reservoir of an arbitrary number of proeprties.
-
-```jldoctest propexamples
-julia> using BenchmarkTools
+```jldoctest
+julia> @defprop Property1{:prop1}
 
 julia> struct MyStruct1
            field1
@@ -178,14 +169,7 @@ julia> m = MyStruct1(2)
 
 julia> propertynames(m) == (:prop1,)
 true
-
 ```
-
-struct MyStruct1
-    field1
-end
-
-@assignprops(MyStruct1, :field1 => Property1)
 """
 macro assignprops(ex, kwdefs...)
     _assignprops(ex, kwdefs...)

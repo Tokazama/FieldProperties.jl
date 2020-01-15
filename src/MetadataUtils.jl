@@ -17,6 +17,8 @@ using Markdown
 export
     # Types
     AbstractMetadata,
+    CalibrationMaximum,
+    CalibrationMinimum,
     Description,
     DictExtension,
     Modality,

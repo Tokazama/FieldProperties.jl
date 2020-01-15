@@ -56,14 +56,6 @@ end
     @test_throws ErrorException("type MyProperties does not have property bar") getproperty(m, :bar)
 end
 
-@defprop CalibrationMaximum{:calmax}
-MetadataUtils.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
-MetadataUtils.proptype(::Type{CalibrationMaximumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
-
-@defprop CalibrationMinimum{:calmin}
-MetadataUtils.propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
-MetadataUtils.proptype(::Type{CalibrationMinimumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
-
 struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
     _parent::P
     my_properties::M
@@ -81,12 +73,12 @@ Base.minimum(m::MyArray) = minimum(parent(m))
 @testset "Optional properties" begin
     A = MyArray(rand(4,4), Dict{Symbol,Any}());
 
-    @test calmax(A) == maximum(A)
+    @test MetadataUtils.calmax(A) == maximum(A)
     @test A.calmax == maximum(A)
 
     new_calmax = Float32((maximum(A) - minimum(A)) / 2)
     A.calmax = new_calmax
     @test A.calmax == new_calmax
     @test A.calmax isa eltype(A)
-    @test calmax(A) == new_calmax
+    @test MetadataUtils.calmax(A) == new_calmax
 end
