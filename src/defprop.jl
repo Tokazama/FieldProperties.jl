@@ -27,26 +27,26 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
     const_type = esc(Symbol(const_name.args[1], :Type))
 
     blk1 = quote
-        @doc $getter_docs $getter_fxn($x) = MetadataUtils._getproperty($x, $const_name)
+        @doc $getter_docs $getter_fxn($x) = FieldProperties._getproperty($x, $const_name)
 
-        @doc $setter_docs $setter_fxn($x, $val) = MetadataUtils._setproperty!($x, $const_name, $val)
+        @doc $setter_docs $setter_fxn($x, $val) = FieldProperties._setproperty!($x, $const_name, $val)
 
-        const $const_type =  MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}
+        const $const_type =  FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}
     end
     blk2 = quote
-        MetadataUtils.propdefault(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $d
+        FieldProperties.propdefault(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $d
 
-        MetadataUtils.proptype(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $t
+        FieldProperties.proptype(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $t
 
-        function MetadataUtils.propdoc(::Type{<:MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn}})
-            return MetadataUtils._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol))))
+        function FieldProperties.propdoc(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}})
+            return FieldProperties._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol))))
         end
 
-        function MetadataUtils._show_property(io, ::MetadataUtils.Property{$sym_name,$getter_fxn,$setter_fxn})
+        function FieldProperties._show_property(io, ::FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn})
             print(io, $const_name_print)
         end
 
-        function MetadataUtils.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
+        function FieldProperties.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
             return $const_name
         end
     end
@@ -76,7 +76,7 @@ function _defprop(x)
     if x.head === :(=)
         return _defprop(x.args[1], x.args[2])
     else
-        return _defprop(x, :(MetadataUtils.NotProperty))
+        return _defprop(x, :(FieldProperties.NotProperty))
     end
 end
 

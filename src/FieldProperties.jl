@@ -1,7 +1,7 @@
 """
-    MetadataUtils
+    FieldProperties
 
-`MetadataUtils` provides an interface for creating method/property based
+`FieldProperties` provides an interface for creating method/property based
 APIs that can be flexibly incorporated into Julia structures. This is predominantly
 accomplished through the use of [`@defproperty`](@ref) and [`@assignprops`](@ref).
 These macros help in the creation of methods and mapping them to the fields of a
@@ -10,7 +10,7 @@ concrete type. Additionally, customization is provided through the use of
 be overloaded to provide unique functionality given the unique combination of a
 property and type.
 """
-module MetadataUtils
+module FieldProperties
 
 using Markdown
 

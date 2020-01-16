@@ -1,5 +1,5 @@
-# MetadataUtils.jl
-[![Build Status](https://travis-ci.com/Tokazama/MetadataUtils.jl.svg?branch=master)](https://travis-ci.com/Tokazama/MetadataUtils.jl)
+# FieldProperties.jl
+[![Build Status](https://travis-ci.com/Tokazama/FieldProperties.jl.svg?branch=master)](https://travis-ci.com/Tokazama/FieldProperties.jl)
 
 ## Introduction
 
@@ -18,7 +18,7 @@ This package was created while trying to balance the following goals:
 
 [ImageMetadata.jl](https://github.com/JuliaImages/ImageMetadata.jl), [MetadataArrays.jl](https://github.com/piever/MetadataArrays.jl), and [MetaGraph.jl](https://github.com/JuliaGraphs/MetaGraphs.jl) are just a few packages that provide a way of adding metadata to array or graph structures. [FieldMetadata.jl](https://github.com/rafaqz/FieldMetadata.jl) allows creating methods that produce "metadata" at each field of a structure. These packages provide similar functionality but have little overlap in the core functionality used here. Therefore, this package may be seen as complementary to these.
 
-There are some packages that have significant overlap with MetadataUtils. [MacroTools.jl](https://github.com/MikeInnes/MacroTools.jl) provides `@forward` which conveniently maps method definitions to specific fields of structures. This overlaps with a great deal of what `@assignprops` does. However, `@forward` is strictly for methods (not properties) and there are some [benefits](#creating-structures-that-contain-properties) to using `@assignprops`. There are many packages aimed at metaprogramming that appear to have very similar utilities. However, MetadataUtils was created because none of them appeared to accomplish all the previously mentioned goals and there wasn't a clear path forward in using them together to accomplish those goals.
+There are some packages that have significant overlap with FieldProperties. [MacroTools.jl](https://github.com/MikeInnes/MacroTools.jl) provides `@forward` which conveniently maps method definitions to specific fields of structures. This overlaps with a great deal of what `@assignprops` does. However, `@forward` is strictly for methods (not properties) and there are some [benefits](#creating-structures-that-contain-properties) to using `@assignprops`. There are many packages aimed at metaprogramming that appear to have very similar utilities. However, FieldProperties was created because none of them appeared to accomplish all the previously mentioned goals and there wasn't a clear path forward in using them together to accomplish those goals.
 
 ## Creating Properties
 
@@ -119,7 +119,7 @@ julia> mutable struct MyProperties{M} <: AbstractMetadata{M}
        end
 
 # tells other functions where to find the dictionary so there's support for dictionary methods
-julia> MetadataUtils.subdict(m::MyProperties) = getfield(m, :my_properties)
+julia> FieldProperties.subdict(m::MyProperties) = getfield(m, :my_properties)
 ```
 
 Binding `Description` and `DictExtension` to specific fields is accomplished through `@assignprops`. Several other methods specific to `MyProperties` are created to provide property like behavior. Most notably, the methods from base overwritten are `getproperty`, `setproperty!`, and `propertynames`.
@@ -138,20 +138,20 @@ julia> propertynames(m)
 ```
 
 ```julia
-julia> MetadataUtils.description(m)
+julia> FieldProperties.description(m)
 ""
 
-julia> MetadataUtils.description!(m, "foo")
+julia> FieldProperties.description!(m, "foo")
 MyProperties{Dict{Symbol,Any}} with 1 entry
     description: foo
 
-julia> MetadataUtils.description(m)
+julia> FieldProperties.description(m)
 "foo"
 
 julia> m.description = "bar"
 "bar"
 
-julia> MetadataUtils.description(m)
+julia> FieldProperties.description(m)
 "bar"
 
 julia> m.description
@@ -162,15 +162,15 @@ Optional properties can be assigned to the `DictExtension` using the `DictExtens
 ```julia
 julia> @defprop CalibrationMaximum{:calmax}
 
-julia> MetadataUtils.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
+julia> FieldProperties.propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
 
-julia> MetadataUtils.proptype(::CalibrationMaximumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+julia> FieldProperties.proptype(::CalibrationMaximumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
 
 julia> @defprop CalibrationMinimum{:calmin}
 
-julia> MetadataUtils.propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
+julia> FieldProperties.propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
 
-julia> MetadataUtils.proptype(::CalibrationMinimumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+julia> FieldProperties.proptype(::CalibrationMinimumType, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
 
 julia> struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
            _parent::P

@@ -25,5 +25,5 @@ nested_fields(::Type{T}) where {T} = ()
 ## macro utils
 is_nested_property_expr(x::Symbol) = (x === :NestedProperty) | (x === :nested_property)
 
-def_nested_fields_expr(T) = Expr(:(=), :(MetadataUtils.nested_fields(::$T)), Expr(:tuple))
+def_nested_fields_expr(T) = Expr(:(=), :(FieldProperties.nested_fields(::$T)), Expr(:tuple))
 

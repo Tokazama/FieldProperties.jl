@@ -1,4 +1,4 @@
-name = "MetadataUtils"
+name = "FieldProperties"
 uuid = "127e4479-4c95-493a-afaa-609d38175b70"
 authors = ["zchristensen "]
 version = "0.1.0"

@@ -1,6 +1,6 @@
-using MetadataUtils, Test
+using FieldProperties, Test
 
-using MetadataUtils: description, description!
+using FieldProperties: description, description!
 
 mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_description::String
@@ -73,12 +73,12 @@ Base.minimum(m::MyArray) = minimum(parent(m))
 @testset "Optional properties" begin
     A = MyArray(rand(4,4), Dict{Symbol,Any}());
 
-    @test MetadataUtils.calmax(A) == maximum(A)
+    @test FieldProperties.calmax(A) == maximum(A)
     @test A.calmax == maximum(A)
 
     new_calmax = Float32((maximum(A) - minimum(A)) / 2)
     A.calmax = new_calmax
     @test A.calmax == new_calmax
     @test A.calmax isa eltype(A)
-    @test MetadataUtils.calmax(A) == new_calmax
+    @test FieldProperties.calmax(A) == new_calmax
 end
