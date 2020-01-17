@@ -50,12 +50,10 @@ _propname(::Type{F}, ::Property{name}) where {F<:Function,name} = name
 """
     propdefault(property, context)
 """
-propdefault(p::P) where {P} = propdefault(p, NotProperty)
-propdefault(p::P, context::C) where {P,C} = propdefault(property(p), C)
-propdefault(p::P, context::C) where {P<:Property,C} = propdefault(P, C)
-propdefault(p::P, ::Type{C}) where {P,C} = propdefault(property(p), C)
-propdefault(p::P, ::Type{C}) where {P<:Property,C} = propdefault(P, C)
-
+propdefault(p) = propdefault(p, NotProperty)
+propdefault(p, context) = propdefault(property(p), context)
+propdefault(p::Property, context) = propdefault(typeof(p), context)
+propdefault(::Type{<:Property}, context) = NotProperty
 
 """
     proptype(p[, context]) -> Type
@@ -63,12 +61,28 @@ propdefault(p::P, ::Type{C}) where {P<:Property,C} = propdefault(P, C)
 Return the appropriate type for property `p` given `context`. This method allows
 unique type restrictions given different types for `context`.
 """
-proptype(::P) where {P} = proptype(P, Nothing)
-proptype(::P, context::C) where {P,C} = proptype(P, C)
-proptype(::P, ::Type{C}) where {P,C} = proptype(P, C)
-proptype(::Type{P}, context::C) where {P,C} = proptype(P, C)
-proptype(::Type{P}, ::Type{C}) where {P,C} = proptype(property(P), C)
-proptype(::Type{P}, ::Type{C}) where {P<:Property,C} = Any
+proptype(p) = proptype(p, NotProperty)
+proptype(p, context) = proptype(property(p), context)
+proptype(p::Property, context) = proptype(typeof(p), context)
+proptype(::Type{<:Property}, context) = Any
+
+"""
+    propdoc(x)
+
+Returns documentation for property `x`.
+"""
+propdoc(x::Function) = propdoc(property(x))
+propdoc(::P) where {P<:Property} = propdoc(P)
+
+_extract_doc(x::Markdown.MD) = _extract_doc(x.content)
+_extract_doc(x::AbstractArray) = isempty(x) ? "" : _extract_doc(first(x))
+_extract_doc(x::Markdown.Paragraph) = _extract_doc(x.content)
+_extract_doc(x::String) = x
+
+function propdoc(::T) where {T}
+    pnames = assigned_properties(T)
+    return NamedTuple{pnames}(([propdoc(T, p) for p in pnames]...,))
+end
 
 """
     propconvert(p, v[, context])
@@ -86,24 +100,6 @@ _propconvert(p, s, v::V, ::Type{T}) where {T,V<:T} = v
 _propconvert(p, s, v::V, ::Type{T}) where {T,V} = convert(T, v)
 
 """
-    propdoc(x)
-
-Returns documentation for property `x`.
-"""
-propdoc(x::Function) = propdoc(property(x))
-propdoc(::P) where {P<:Property} = propdoc(P)
-
-_extract_doc(x::Markdown.MD) = _extract_doc(x.content)
-_extract_doc(x::AbstractArray) = isempty(x) ? "" : _extract_doc(first(x))
-_extract_doc(x::Markdown.Paragraph) = _extract_doc(x.content)
-_extract_doc(x::String) = x
-
-function propdoc(::T) where {T}
-    pnames = _property_fields(T)
-    return NamedTuple{pnames}(([propdoc(T, p) for p in pnames]...,))
-end
-
-"""
     prop2field(x, p) -> Symbol
 
 Given the `x` and property `p` returns the symbol corresponding to the field
@@ -113,7 +109,7 @@ where the property is stored in `x`. If no corresponding symbol is found then
 @inline prop2field(::T, p::P) where {T,P} = prop2field(T, property(P))
 prop2field(::T, ::Type{P}) where {T,P} = prop2field(T, P)
 prop2field(::Type{T}, ::P) where {T,P} = prop2field(T, P)
-prop2field(::Type{T}, ::Type{P}) where {T,P} = prop2field(C, property(P))
+prop2field(::Type{T}, ::Type{P}) where {T,P} = prop2field(T, property(P))
 prop2field(::Type{T}, ::Type{P}) where {T,P<:Property} = nothing
 
 """
@@ -127,5 +123,5 @@ sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 """
 Indicates the absence of a property.
 """
-@defprop NotProperty{:not_property}=NotProperty
+@defprop NotProperty{:not_property}
 

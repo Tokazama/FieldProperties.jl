@@ -9,20 +9,22 @@ Description that may say whatever you like.
 
 @defprop Modality{:modality}
 
+"""
+Property providing label for parent structure.
+"""
 @defprop Label{:label}
 
+"""
+Property providing name for parent structure.
+"""
+@defprop Name{:name}
 
 """
 Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.
 """
-@defprop CalibrationMaximum{:calmax}
-propdefault(::CalibrationMaximumType, x::AbstractArray) = maximum(x)
-proptype(::Type{CalibrationMaximumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
+@defprop CalibrationMaximum{:calmax}::(x->eltype(x))=x->maximum(x)
 
 """
 Specifies minimum element for display purposes. If not specified returns the minimum value in the collection.
 """
-@defprop CalibrationMinimum{:calmin}
-propdefault(::CalibrationMinimumType, x::AbstractArray) = minimum(x)
-proptype(::Type{CalibrationMinimumType}, ::Type{<:AbstractArray{T,N}}) where {T,N} = T
-
+@defprop CalibrationMinimum{:calmin}::(x->eltype(x))=x->minimum(x)

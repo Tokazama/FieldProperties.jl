@@ -65,7 +65,6 @@ Base.size(m::MyArray) = size(parent(m))
 Base.maximum(m::MyArray) = maximum(parent(m))
 Base.minimum(m::MyArray) = minimum(parent(m))
 
-
 @assignprops(
     MyArray,
     :my_properties => DictExtension(CalibrationMaximum,CalibrationMinimum))

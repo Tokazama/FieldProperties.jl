@@ -14,8 +14,6 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
     sym_name = QuoteNode(name)
     getter_fxn = esc(name)
     setter_fxn = esc(Symbol(name, :!))
-    d = esc(d)
-    t = esc(t)
     x = esc(:x)
     val = esc(:val)
     s = esc(:s)
@@ -26,30 +24,23 @@ function _defprop(d, t, name::Symbol, const_name::Expr)
 
     const_type = esc(Symbol(const_name.args[1], :Type))
 
-    blk1 = quote
-        @doc $getter_docs $getter_fxn($x) = FieldProperties._getproperty($x, $const_name)
+    blk1 = Expr(:block)
+    push!(blk1.args, :(@doc $getter_docs $getter_fxn($x) = FieldProperties._getproperty($x, $const_name)))
+    push!(blk1.args, :(@doc $setter_docs $setter_fxn($x, $val) = FieldProperties._setproperty!($x, $const_name, $val)))
+    push!(blk1.args, :(const $const_type =  FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}))
 
-        @doc $setter_docs $setter_fxn($x, $val) = FieldProperties._setproperty!($x, $const_name, $val)
-
-        const $const_type =  FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}
-    end
-    blk2 = quote
-        FieldProperties.propdefault(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $d
-
-        FieldProperties.proptype(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}}, ::Type{C}) where {C} = $t
-
-        function FieldProperties.propdoc(::Type{<:FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}})
+    blk2 = Expr(:block)
+    push!(blk2.args,
+        :(function FieldProperties.propdoc(::Type{<:$const_type})
             return FieldProperties._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol))))
-        end
-
-        function FieldProperties._show_property(io, ::FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn})
-            print(io, $const_name_print)
-        end
-
-        function FieldProperties.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
+        end))
+    push!(blk2.args, :(FieldProperties._show_property(io, ::$const_type) = print(io, $const_name_print)))
+    push!(blk2.args,
+        :(function FieldProperties.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
             return $const_name
-        end
-    end
+        end))
+    _add_propdefault!(blk2, d, const_type)
+    _add_proptype!(blk2, t, const_type)
 
     return :(const $(const_name) = $const_type()), blk1, blk2
 end
@@ -66,19 +57,48 @@ end
  
 function _defprop(x, d)
     if x.head === :(::)
-        return _defprop(x.args[1], d, x.args[2])
+        if x.args[2] isa Expr && x.args[2].head == :->
+            return _defprop(x.args[1], d, (x.args[2].args[1], x.args[2].args[2]))
+        else
+            return _defprop(x.args[1], d, x.args[2])
+        end
     else
-        return _defprop(x, d, :Any)
+        return _defprop(x, d, nothing)
     end
 end
 
+#:(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(dcall))) = $(esc(dfxn)))
+
 function _defprop(x)
     if x.head === :(=)
-        return _defprop(x.args[1], x.args[2])
+        if x.args[2] isa Expr && x.args[2].head == :->
+            return _defprop(x.args[1], (x.args[2].args[1], x.args[2].args[2]))
+        else
+            return _defprop(x.args[1], x.args[2])
+        end
     else
-        return _defprop(x, :(FieldProperties.NotProperty))
+        return _defprop(x, nothing)
     end
 end
+
+_add_propdefault!(blk::Expr, ::Nothing, const_type) = nothing
+function _add_propdefault!(blk::Expr, expr, const_type)
+    if expr isa Tuple
+        push!(blk.args, :(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(expr[1]))) = $(esc(expr[2]))))
+    else
+        push!(blk.args, :(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(:x))) = $(esc(expr))))
+    end
+end
+
+_add_proptype!(blk::Expr, ::Nothing, const_type) = nothing
+function _add_proptype!(blk::Expr, expr, const_type)
+    if expr isa Tuple
+        push!(blk.args, :(FieldProperties.proptype(::Type{<:$const_type}, $(esc(expr[1]))) = $(esc(expr[2]))))
+    else
+        push!(blk.args, :(FieldProperties.proptype(::Type{<:$const_type}, $(esc(:x))) = $(esc(expr))))
+    end
+end
+
 
 """
     @defprop
@@ -165,6 +185,11 @@ true
 
 julia> Property4.setter == prop4!
 true
+```
+
+Default type and default values for the property can be defined by functions
+```jldoctest propexamples
+julia> @defprop Property5{:prop5}::(x -> eltype(x))= x -> maximum(x)
 ```
 """
 macro defprop(expr)
