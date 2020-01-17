@@ -14,7 +14,7 @@ Returns `true` if `T` has fields that containing extensible dictionary of proper
 """
 @inline has_dictextension(::T) where {T} = has_dictextension(T)
 @inline has_dictextension(::Type{T}) where {T} = _has_dictextension(dictextension_field(T))
-_has_dictextension(::NotPropertyType) = false
+_has_dictextension(::Type{<:NotProperty}) = false
 _has_dictextension(::Symbol) = true
 
 """

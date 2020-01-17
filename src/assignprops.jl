@@ -25,8 +25,7 @@ function _propertynames(x)
     end
 end
 
-add_prop2field!(blk, pname, fname) = chain_ifelse!(blk, Expr(:call, :(===), pname, :p), fname)
-add_sym2prop!(blk, pname, prop) = chain_ifelse!(blk, Expr(:call, :(===), :s, pname), prop)
+#chain_ifelse!(blk, pname, s, trueout) = _chain_ifelse!(blk, Expr(:call, :(===), pname, s), Expr(:return, trueout))
 function chain_ifelse!(blk::Expr, condition::Expr, trueout)
     if blk.head === :if
         if isempty(blk.args)
@@ -62,7 +61,6 @@ function final_out!(blk, r)
     end
 end
 
-
 function parse_field_assignment(x::Expr)
     if x.head == :call
         if x.args[1] == :(=>)
@@ -78,7 +76,7 @@ end
 to_field_name(lhs::QuoteNode) = lhs
 to_field_name(lhs::Symbol) = QuoteNode(lhs)
 
-to_property_name(rhs::Symbol) = Expr(:call, :(FieldProperties.propname), rhs)
+to_property_name(rhs::Symbol) = Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), rhs)
 # where :(Property(OptionalProperties))
 to_property_name(rhs::Expr) = to_property_name(rhs.args[1])
 
@@ -102,10 +100,21 @@ function _assignprops(expr, fields...)
     blk = Expr(:block)
     nf = Expr(:tuple)
     pf = Expr(:tuple)
+    x = esc(:x)
+    s = esc(:s)
+    p = esc(:p)
     T = esc(expr)
+    gp = esc(Expr(:., :Base, QuoteNode(:getproperty)))
+    _gp = esc(Expr(:., :FieldProperties, QuoteNode(:_getproperty)))
+    sp = esc(Expr(:., :Base, QuoteNode(:setproperty!)))
+    _sp = esc(Expr(:., :FieldProperties, QuoteNode(:_setproperty!)))
+    s2p = esc(Expr(:., :FieldProperties, QuoteNode(:sym2prop)))
+    p2f = esc(Expr(:., :FieldProperties, QuoteNode(:prop2field)))
+    AP = esc(Expr(:., :FieldProperties, QuoteNode(:AbstractProperty)))
+    FPpn = esc(Expr(:., :FieldProperties, QuoteNode(:propname)))
 
     if length(fields) === 0
-        blk_sym2prop = Expr(:return, esc(FieldProperties.NotProperty))
+        blk_sym2prop = Expr(:return, esc(FieldProperties.not_property))
         blk_prop2field = Expr(:return, esc(:nothing))
     else
         blk_sym2prop = Expr(:if)
@@ -120,8 +129,8 @@ function _assignprops(expr, fields...)
                 has_nested_fields_bool = true
                 push!(nf.args, fname)
             elseif is_dictextension_expr(rhs)
-                push!(blk.args, Expr(:(=), :(FieldProperties.dictextension_field(::Type{<:$T})), fname))
-                push!(blk.args, :(FieldProperties.dictextension(x::$T) = getfield(x, $fname)))
+                push!(blk.args, Expr(:(=), Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:dictextension_field))), :(::Type{<:$T})), fname))
+                push!(blk.args, Expr(:(=), Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:dictextension))), Expr(:(::), x, T)), :(getfield($x, $fname))))
                 if has_optional_properties_expr(rhs)
                     push!(blk.args,
                           Expr(:(=),
@@ -129,26 +138,30 @@ function _assignprops(expr, fields...)
                                  get_optional_properties_expr(rhs)))
                 end
             else
-                push!(pf.args, Expr(:call, esc(:(FieldProperties.propname)), prop))
-                add_sym2prop!(blk_sym2prop, pname, prop)
-                add_prop2field!(blk_prop2field, prop, fname)
+                # Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:get_getter)))
+                push!(pf.args, Expr(:call, FPpn, prop))
+                chain_ifelse!(blk_sym2prop, Expr(:call, :(===), pname, s), Expr(:return, esc(prop)))
+                chain_ifelse!(blk_prop2field, Expr(:call, :(===), Expr(:call, FPpn, esc(prop)), Expr(:call, FPpn, p)), Expr(:return, fname))
             end
         end
         if isempty(blk_sym2prop.args)
-            blk_sym2prop = Expr(:return, esc(FieldProperties.NotProperty))
+            blk_sym2prop = Expr(:return, esc(FieldProperties.not_property))
             blk_prop2field = Expr(:return, esc(:nothing))
         end
-        final_out!(blk_sym2prop, Expr(:return, esc(FieldProperties.NotProperty)))
+        final_out!(blk_sym2prop, Expr(:return, esc(FieldProperties.not_property)))
         final_out!(blk_prop2field, Expr(:return, esc(:nothing)))
     end
 
-    push!(blk.args, :(FieldProperties.assigned_properties(::Type{<:$T}) = $pf))
-    push!(blk.args, :(FieldProperties.prop2field(::Type{<:$T}, p::FieldProperties.Property) = $blk_prop2field))
-    push!(blk.args, :(FieldProperties.sym2prop(::Type{<:$T}, s::Symbol) = $blk_sym2prop))
-    push!(blk.args, :(FieldProperties.nested_fields(::Type{<:$T}) = $nf))
-    push!(blk.args, :(Base.getproperty(x::$T, s::Symbol) = FieldProperties._getproperty(x, FieldProperties.sym2prop($T, s), s)))
-    push!(blk.args, :(Base.setproperty!(x::$T, s::Symbol, val) = FieldProperties._setproperty!(x, FieldProperties.sym2prop($T, s), s, val)))
-    push!(blk.args, :(Base.propertynames(x::$T) = FieldProperties._propertynames(x)))
+    push!(blk.args, :(FieldProperties.assigned_properties(::$(esc(:Type)){<:$T}) = $pf))
+    push!(blk.args, :($p2f(::$(esc(:Type)){<:$T}, $p::$AP) = $blk_prop2field))
+    push!(blk.args, :($s2p(::$(esc(:Type)){<:$T}, $s::$(esc(:Symbol))) = $blk_sym2prop))
+    if !isempty(nf.args)
+        push!(blk.args, :(FieldProperties.nested_fields(::Type{<:$T}) = $nf))
+    end
+    # These are the only base methods we override
+    push!(blk.args, Expr(:(=), :($gp($x::$T, $s::$(esc(:Symbol)))), :($_gp($x, $s2p($T, $s), $s))))
+    push!(blk.args, Expr(:(=), :($sp($x::$T, $s::$(esc(:Symbol)), $(esc(:val)))), :($_sp($x, $s2p($T, $s), $s, $(esc(:val))))))
+    push!(blk.args, Expr(:(=), :(Base.propertynames($x::$T)), :(FieldProperties._propertynames($x))))
 
     return blk
 end

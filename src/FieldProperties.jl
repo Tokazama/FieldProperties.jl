@@ -17,27 +17,31 @@ using Markdown
 export
     # Types
     AbstractMetadata,
-    CalibrationMaximum,
-    CalibrationMinimum,
-    Description,
     DictExtension,
-    Modality,
     NotProperty,
     NoopMetadata,
     NestedProperty,
-    Property,
-    Status,
+    AbstractProperty,
     # Macros
     @defprop,
     @assignprops,
     # methods
+    calmax,
+    calmax!,
+    calmin,
+    calmin!,
+    description,
+    description!,
     dictextension,
     propconvert,
     propdefault,
     propdoc,
-    property,
     propname,
-    proptype
+    proptype,
+    status,
+    status!,
+    modality,
+    modality!
 
 include("defprop.jl")
 include("assignprops.jl")

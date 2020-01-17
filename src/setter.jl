@@ -1,9 +1,8 @@
+(p::AbstractProperty{name,Setter})(x, val) where {name} = _setproperty!(x, p, val)
+
 _setproperty!(x, s::Symbol, val) = _setproperty!(x, sym2prop(x, s), s, val)
-_setproperty!(x, p::Property, val) = _setproperty!(x, p, prop2field(x, p), val)
-function _setproperty!(x, p, s, val)
-    setter!(x, p, s, propconvert(x, p, val), true)
-    return x
-end
+_setproperty!(x, p::AbstractProperty, val) = _setproperty!(x, p, prop2field(x, p), val)
+_setproperty!(x, p, s, val) = (setter!(x, p, s, propconvert(p, s, val, x), true); x)
 
 #=
     setter!(x, p::Property, s::Symbol, val)
@@ -14,12 +13,12 @@ end
   a nested property field. This prevents from setting proprties in `dictproperties` on anything
   but the top level. If a nested structure has dictproperties it can be set by using x.nested.somevalue_into_dictproperties
 =#
-@inline setter!(x, p::Property, val, toplevel::Bool) = setter!(x, p, prop2field(x, p), val, toplevel)
+@inline setter!(x, p::AbstractProperty, val, toplevel::Bool) = setter!(x, p, prop2field(x, p), val, toplevel)
 @inline setter!(x, s::Symbol, val, toplevel::Bool) = setter!(x, sym2prop(x, s), s, val, toplevel)
 
 # need to run sym2prop one more time in case property is mapped to field with different name
-setter!(x, p::Property, s::Symbol, val, toplevel::Bool) = setfield!(x, prop2field(x, p), val)
-function setter!(x, p::NotPropertyType, s::Symbol, val, toplevel::Bool)
+setter!(x, p::AbstractProperty, s::Symbol, val, toplevel::Bool) = setfield!(x, prop2field(x, p), val)
+function setter!(x, p::NotProperty, s::Symbol, val, toplevel::Bool)
     Base.@_inline_meta
     if has_nested_properties(x)
         for f in _nested_fields(x)
@@ -34,7 +33,7 @@ function setter!(x, p::NotPropertyType, s::Symbol, val, toplevel::Bool)
     end
     return out
 end
-function setter!(x, p::Property, s::Nothing, val, toplevel::Bool)
+function setter!(x, p::AbstractProperty, s::Nothing, val, toplevel::Bool)
     Base.@_inline_meta
     if has_nested_properties(x)
         for f in _nested_fields(x)

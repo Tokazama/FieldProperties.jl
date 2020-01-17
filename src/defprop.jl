@@ -1,51 +1,20 @@
-
-function create_getter_docs(name, const_name)
-    "\t\t$name(x)\n\nReturns the  $(const_name.args[1]) property (see [`$(const_name.args[1])`](@ref))."
-end
-
-function create_setter_docs(name, const_name)
-    "\t\t$(name)!(x, val)\n\nSets the  $(const_name.args[1]) property (see [`$(const_name.args[1])`](@ref))."
-end
-
-###
-### @defprop
-###
-function _defprop(d, t, name::Symbol, const_name::Expr)
+function _defprop(d, t, name::Symbol, struct_name::Expr)
     sym_name = QuoteNode(name)
     getter_fxn = esc(name)
     setter_fxn = esc(Symbol(name, :!))
-    x = esc(:x)
-    val = esc(:val)
-    s = esc(:s)
-    getter_docs = create_getter_docs(name, const_name)
-    setter_docs = create_setter_docs(name, const_name)
-    const_name_print = string(const_name.args[1])
-    const_name_symbol = QuoteNode(const_name.args[1])
+    T = esc(:T)
 
-    const_type = esc(Symbol(const_name.args[1], :Type))
-
-    blk1 = Expr(:block)
-    push!(blk1.args, :(@doc $getter_docs $getter_fxn($x) = FieldProperties._getproperty($x, $const_name)))
-    push!(blk1.args, :(@doc $setter_docs $setter_fxn($x, $val) = FieldProperties._setproperty!($x, $const_name, $val)))
-    push!(blk1.args, :(const $const_type =  FieldProperties.Property{$sym_name,$getter_fxn,$setter_fxn}))
-
-    blk2 = Expr(:block)
-    push!(blk2.args,
-        :(function FieldProperties.propdoc(::Type{<:$const_type})
-            return FieldProperties._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(const_name_symbol))))
-        end))
-    push!(blk2.args, :(FieldProperties._show_property(io, ::$const_type) = print(io, $const_name_print)))
-    push!(blk2.args,
-        :(function FieldProperties.property(::Type{<:Union{typeof($getter_fxn),typeof($setter_fxn)}})
-            return $const_name
-        end))
-    _add_propdefault!(blk2, d, const_type)
-    _add_proptype!(blk2, t, const_type)
-
-    return :(const $(const_name) = $const_type()), blk1, blk2
+    blk = Expr(:block)
+    push!(blk.args, :(const $getter_fxn = $struct_name{FieldProperties.Getter}()))
+    push!(blk.args, :(const $setter_fxn = $struct_name{FieldProperties.Setter}()))
+    push!(blk.args, :(FieldProperties.get_setter(::Type{<:$struct_name}) = $setter_fxn))
+    push!(blk.args, :(FieldProperties.get_getter(::Type{<:$struct_name}) = $getter_fxn))
+    _add_propdefault!(blk, d, struct_name)
+    _add_proptype!(blk, t, struct_name)
+    return :(struct $(struct_name){$T} <: FieldProperties.AbstractProperty{$sym_name,$T} end), blk
 end
 
-_defprop(d, t, name::QuoteNode, const_name::Symbol) = _defprop(d, t, name.value, esc(const_name))
+_defprop(d, t, name::QuoteNode, struct_name::Symbol) = _defprop(d, t, name.value, esc(struct_name))
 
 function _defprop(x, d, t)
     if x.head === :curly
@@ -119,9 +88,6 @@ true
 julia> proptype(Property1) == Any
 true
 
-julia> Property1.getter == prop1
-true
-
 julia> Property1.setter == prop1!
 true
 ```
@@ -137,9 +103,6 @@ julia> propdefault(Property2) == NotProperty
 true
 
 julia> proptype(Property2) == Int
-true
-
-julia> Property2.getter == prop2
 true
 
 julia> Property2.setter == prop2!
@@ -160,9 +123,6 @@ julia> proptype(Property3) == Int
 true
 p
 
-julia> Property3.getter == prop3
-true
-
 julia> Property3.setter == prop3!
 true
 ```
@@ -180,9 +140,6 @@ true
 julia> proptype(Property4) == Any
 true
 
-julia> Property4.getter == prop4
-true
-
 julia> Property4.setter == prop4!
 true
 ```
@@ -194,10 +151,9 @@ julia> @defprop Property5{:prop5}::(x -> eltype(x))= x -> maximum(x)
 """
 macro defprop(expr)
     expr = macroexpand(__module__, expr)
-    PropertyConst, blk1, blk2 = _defprop(expr)
+    PropertyStruct, blk = _defprop(expr)
     quote
-        $blk1
-        Base.@__doc__($(PropertyConst))
-        $blk2
+        Base.@__doc__($(PropertyStruct))
+        $blk
     end
 end

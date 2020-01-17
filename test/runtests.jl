@@ -1,7 +1,5 @@
 using FieldProperties, Test
 
-using FieldProperties: description, description!
-
 mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_description::String
     my_properties::M
@@ -9,26 +7,15 @@ end
 
 @assignprops(
     MyProperties,
-    :my_description => Description,
-    :my_properties => DictExtension)
+    :my_description => description,
+    :my_properties => dictextension)
 
 m = MyProperties("", Dict{Symbol,Any}())
 
 @testset "Property interface" begin
-    @test getproperty(Description, :getter) == description
-    @test getproperty(Description, :setter) == description!
-    @test_throws ErrorException getproperty(Description, :bar)
-
-    @test propertynames(Description) == (:getter, :setter)
-
-    @test property(Description) == Description
-    @test property(description) == Description
-    @test property(description!) == Description
-
-    @test propname(Description) == :description
     @test propname(description) == :description
 
-    @test propdefault(description) == NotProperty
+    @test propdefault(description) == FieldProperties.not_property
     @test proptype(description) <: String
 end
 
@@ -48,7 +35,7 @@ end
     @test @inferred(encapsulated_getproperty(m)) == "bar"
 end
 
-@testset "@property DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
+@testset "DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
     # Note: we don't have specifiers on these so we can't expect inferrible types
     m.foo = ""
     @test m.foo == ""
@@ -67,7 +54,7 @@ Base.minimum(m::MyArray) = minimum(parent(m))
 
 @assignprops(
     MyArray,
-    :my_properties => DictExtension(CalibrationMaximum,CalibrationMinimum))
+    :my_properties => dictextension(calmax,calmin))
 
 @testset "Optional properties" begin
     A = MyArray(rand(4,4), Dict{Symbol,Any}());
