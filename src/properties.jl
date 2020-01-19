@@ -1,18 +1,9 @@
 
-"""
-    Setter
-
-Type indicating that an instance of an `AbstractProperty` sets a properties.
-"""
+"Setter - Type indicating that an instance of an `AbstractProperty` sets a properties."
 struct Setter end
 
-"""
-    Getter
-
-Type indicating that an instance of an `AbstractProperty` is a retreives properties.
-"""
+"Getter - Type indicating that an instance of an `AbstractProperty` is a retreives properties."
 struct Getter end
-
 
 """
     AbstractProperty{name}
@@ -62,6 +53,7 @@ propname(::Type{<:AbstractProperty{name}}) where {name} = name
     propdefault(property, context)
 """
 propdefault(p::AbstractProperty) = propdefault(p, not_property)
+propdefault(::Type{P}) where {P<:AbstractProperty} = propdefault(P, not_property)
 propdefault(p::AbstractProperty, context) = propdefault(typeof(p), context)
 propdefault(::Type{<:AbstractProperty}, context) = not_property
 
@@ -127,6 +119,17 @@ corresponding property is found then `NoProperty` is returned.
 """
 sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 sym2prop(::Type{T}, s::Symbol) where {T} = not_property
+
+"""
+    sym2optional
+"""
+sym2optional(::T, s::Symbol) where {T} = sym2optional(T, s)
+function sym2optional(::Type{T}, s::Symbol) where {T}
+    for op in optional_properties(T)
+        propname(op) === s && return op
+    end
+    return not_property
+end
 
 """
 Indicates the absence of a property.

@@ -37,14 +37,6 @@ NotProperty
 # no type restriction for Property1
 julia> proptype(Property1)
 Any
-
-# formal getter method for Property1
-julia> Property1.getter
-prop1 (generic function with 1 method)
-
-# formal setter method for Property1
-julia> Property1.setter
-prop1! (generic function with 1 method)
 ```
 
 Define a property's type
@@ -58,12 +50,6 @@ julia> propdefault(Property2) == NotProperty
 true
 
 julia> proptype(Property2) == Int
-true
-
-julia> Property2.getter == prop2
-true
-
-julia> Property2.setter == prop2!
 true
 ```
 
@@ -80,12 +66,6 @@ true
 julia> proptype(Property3) == Int
 true
 p
-
-julia> Property3.getter == prop3
-true
-
-julia> Property3.setter == prop3!
-true
 ```
 
 Define a default value but no type requirement.
@@ -100,12 +80,20 @@ true
 
 julia> proptype(Property4) == Any
 true
+```
 
-julia> Property4.getter == prop4
-true
+## Changing A Property's Behavior
 
-julia> Property4.setter == prop4!
-true
+If a previously defined property (e.g, `prop3` from above) needs a different type or default output, we can just create unique `proptype` and `propdefault` methods.
+
+```julia
+
+julia> struct MyStruct end
+
+julia> FieldProperties.proptype(::Type{<:Property3}, ::Type{<:MyStruct}) = String
+
+julia> FieldProperties.propdefault(::Type{<:Property3}, ::Type{<:MyStruct}) = ""
+
 ```
 
 
@@ -127,8 +115,8 @@ Binding `Description` and `DictExtension` to specific fields is accomplished thr
 ```julia
 julia> @assignprops(
            MyProperties,
-           :my_description => Description,
-           :my_properties => DictExtension)
+           :my_description => description,
+           :my_properties => dictextension)
 
 julia> m = MyProperties("", Dict{Symbol,Any}())
 MyProperties{Dict{Symbol,Any}} with 1 entry
@@ -188,7 +176,7 @@ julia> Base.minimum(m::MyArray) = minimum(parent(m))
 
 julia> @assignprops(
            MyArray,
-           :my_properties => DictExtension(CalibrationMaximum,CalibrationMinimum))
+           :my_properties => dictextension(calmax,calmin))
 ```
 
 ## Internals Property Design

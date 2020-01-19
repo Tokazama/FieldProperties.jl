@@ -3,11 +3,6 @@
 """
 abstract type AbstractMetadata{D<:AbstractDict{Symbol,Any}} <: AbstractDict{Symbol,Any} end
 
-"""
-    dictextension
-"""
-function dictextension end
-
 Base.empty!(m::AbstractMetadata) = empty!(dictextension(m))
 
 Base.get(m::AbstractMetadata, k, default) = get(dictextension(m), k, default)

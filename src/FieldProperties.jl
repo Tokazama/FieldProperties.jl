@@ -6,9 +6,8 @@ APIs that can be flexibly incorporated into Julia structures. This is predominan
 accomplished through the use of [`@defproperty`](@ref) and [`@assignprops`](@ref).
 These macros help in the creation of methods and mapping them to the fields of a
 concrete type. Additionally, customization is provided through the use of
-[`propconvert`](@ref), [`propdefault`](@ref), and [`proptype`](@ref) which can
-be overloaded to provide unique functionality given the unique combination of a
-property and type.
+[`propdefault`](@ref) and [`proptype`](@ref) which can be overloaded to provide
+unique functionality given the unique combination of a property and type.
 """
 module FieldProperties
 

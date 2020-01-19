@@ -1,4 +1,5 @@
 using FieldProperties, Test
+using FieldProperties: getter, setter!
 
 mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_description::String
@@ -12,9 +13,38 @@ end
 
 m = MyProperties("", Dict{Symbol,Any}())
 
-@testset "Property interface" begin
-    @test propname(description) == :description
+@defprop Property1{:prop1}
 
+@defprop Property2{:prop2}::Int
+
+@defprop Property3{:prop3}::Int=1
+
+@defprop Property4{:prop4}=1
+
+@testset "Property interface" begin
+    @test propname(prop1) == :prop1
+    #@test propdefault(prop1) == NotProperty
+    @test proptype(prop1) <: Any
+
+    @test propname(prop2) == :prop2
+    #@test propdefault(prop2) == NotProperty
+    @test proptype(prop2) <: Int
+
+    @test propname(prop3) == :prop3
+    @test propdefault(prop3) == 1
+    @test proptype(prop3) <: Int
+
+    @test propname(prop4) == :prop4
+    @test propdefault(prop4) == 1
+    @test proptype(prop4) <: Any
+
+    FieldProperties.propdefault(::Type{<:Property4}, ::AbstractString) = "1"
+    FieldProperties.proptype(::Type{<:Property4}, ::AbstractString) = String
+
+    @test prop4(2) == 1
+    @test prop4("foo") == "1"
+
+    @test propname(description) == :description
     @test propdefault(description) == FieldProperties.not_property
     @test proptype(description) <: String
 end
@@ -45,26 +75,40 @@ end
 
 struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
     _parent::P
+    my_calmin::T
     my_properties::M
 end
 Base.parent(m::MyArray) = getfield(m, :_parent)
 Base.size(m::MyArray) = size(parent(m))
 Base.maximum(m::MyArray) = maximum(parent(m))
 Base.minimum(m::MyArray) = minimum(parent(m))
+Base.getindex(m::MyArray, i...) = getindex(parent(m), i...)
 
 @assignprops(
     MyArray,
-    :my_properties => dictextension(calmax,calmin))
+    :my_calmin => calmin,
+    :my_properties => dictextension(calmax))
 
+get_flag(x, p) = first(getter(x, p))
+nested_get_flag(x) = get_flag(x, :calmax)
 @testset "Optional properties" begin
-    A = MyArray(rand(4,4), Dict{Symbol,Any}());
+    a = rand(4,4);
+    my_min = (maximum(a) - minimum(a)) / 2
+    my_a = MyArray(a, my_min, Dict{Symbol,Any}());
 
-    @test FieldProperties.calmax(A) == maximum(A)
-    @test A.calmax == maximum(A)
+    @test @inferred(proptype(calmax, my_a)) <: eltype(a)
+    @test @inferred(get_flag(my_a, calmax)) == calmax
+    @test @inferred(nested_get_flag(my_a)) == calmax
+    @test @inferred(calmax(a)) == maximum(a)
+    @test @inferred(calmax(my_a)) == maximum(a)
+    @test my_a.calmax == maximum(a)
 
-    new_calmax = Float32((maximum(A) - minimum(A)) / 2)
-    A.calmax = new_calmax
-    @test A.calmax == new_calmax
-    @test A.calmax isa eltype(A)
-    @test FieldProperties.calmax(A) == new_calmax
+    @test @inferred(calmin(a)) == minimum(a)
+
+    new_calmax = Float32((maximum(a) - minimum(a)) / 2)
+    my_a.calmax = new_calmax
+    @test my_a.calmax == new_calmax
+    @test my_a.calmax isa eltype(my_a)
+    @test calmax(my_a) == new_calmax
 end
+

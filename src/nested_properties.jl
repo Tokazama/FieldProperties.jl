@@ -3,7 +3,6 @@ Indicator for a field containing properties nested within a structure.
 """
 @defprop NestedProperty{:nested_property}
 
-
 """
     has_nested_properties(::T) -> Bool
 
