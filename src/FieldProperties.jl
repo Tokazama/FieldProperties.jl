@@ -32,7 +32,6 @@ export
     description,
     description!,
     dictextension,
-    propconvert,
     propdefault,
     propdoc,
     propname,

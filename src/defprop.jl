@@ -36,8 +36,6 @@ function _defprop(x, d)
     end
 end
 
-#:(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(dcall))) = $(esc(dfxn)))
-
 function _defprop(x)
     if x.head === :(=)
         if x.args[2] isa Expr && x.args[2].head == :->
@@ -76,71 +74,59 @@ end
 ```jldoctest propexamples
 julia> @defprop Property1{:prop1}
 
-julia> propname(Property1) == :prop1
-true
+julia> propname(prop1)
+:prop1
 
-julia> propdefault(Property1)
+julia> propdefault(prop1)
 NotProperty
 
-julia> propdefault(Property1) == NotProperty
-true
+julia> propdefault(prop11)
+NotProperty
 
-julia> proptype(Property1) == Any
-true
-
-julia> Property1.setter == prop1!
-true
+julia> proptype(prop11)
+Any
 ```
 
 Define the propertie's type
 ```jldoctest propexamples
 julia> @defprop Property2{:prop2}::Int
 
-julia> propname(Property2) == :prop2
+julia> propname(prop2)
+:prop2
+
+julia> propdefault(prop2)
+NotProperty
+
+julia> proptype(prop2) == Int
 true
 
-julia> propdefault(Property2) == NotProperty
-true
-
-julia> proptype(Property2) == Int
-true
-
-julia> Property2.setter == prop2!
-true
 ```
 
 Define type requirement and default value.
 ```jldoctest propexamples
 julia> @defprop Property3{:prop3}::Int=1
 
-julia> propname(Property3) == :prop3
-true
+julia> propname(prop3)
+:prop3
 
-julia> propdefault(Property3) == 1
-true
+julia> propdefault(prop3)
+1
 
-julia> proptype(Property3) == Int
-true
-p
-
-julia> Property3.setter == prop3!
-true
+julia> proptype(prop3)
+Int
 ```
 
 Define a default value but no type requirement.
 ```jldoctest propexamples
 julia> @defprop Property4{:prop4}=1
 
-julia> propname(Property4) == :prop4
+julia> propname(prop4) == :prop4
 true
 
-julia> propdefault(Property4) == 1
+julia> propdefault(prop4) == 1
 true
 
-julia> proptype(Property4) == Any
-true
-
-julia> Property4.setter == prop4!
+julia> proptype(prop4) == Any
 true
 ```
 
