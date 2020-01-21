@@ -115,3 +115,11 @@ nested_get_flag(x) = get_flag(x, :calmax)
     @test calmax(my_a) == new_calmax
 end
 
+
+@testset "Metadata" begin
+    m = Metadata(; a = 1, b= 2)
+    @test m.a == 1
+    @test m.b == 2
+    m.b = 3
+    @test m.b == 3
+end
