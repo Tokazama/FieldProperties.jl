@@ -100,3 +100,23 @@ Base.iterate(m::NoopMetadata, state) = nothing
 function Base.setindex!(m::NoopMetadata, val, s::Symbol)
     error("Cannot set property for NoopMetadata.")
 end
+
+"""
+    Metadata{D}
+
+Subtype of `AbstractMetadata` that provides `getproperty` syntax for accessing
+the values of a dictionary.
+"""
+struct Metadata{D} <: AbstractMetadata{D}
+    dictextension::D
+end
+
+function Metadata(; kwargs...)
+    out = Metadata(Dict{Symbol,Any}())
+    for (k,v) in kwargs
+        out[k] = v
+    end
+    return out
+end
+
+@assignprops(Metadata, :dictextension => dictextension)

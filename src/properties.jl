@@ -72,19 +72,17 @@ proptype(::Type{<:AbstractProperty}, context) = Any
 
 Returns documentation for property `x`.
 """
-propdoc(::P) where {P<:AbstractProperty} = propdoc(P)
+propdoc(::T) where {T} = propdoc(T)
 propdoc(::Type{P}) where {P<:AbstractProperty} = _extract_doc(Base.Docs.doc(P))
-#FieldProperties._extract_doc(Base.Docs.doc(Base.Docs.Binding($(@__MODULE__()), $(struct_name_symbol))))
+function propdoc(::Type{T}) where {T}
+    pnames = assigned_properties(T)
+    return NamedTuple{pnames}(([propdoc(sym2prop(T, p)) for p in pnames]...,))
+end
 
 _extract_doc(x::Markdown.MD) = _extract_doc(x.content)
 _extract_doc(x::AbstractArray) = isempty(x) ? "" : _extract_doc(first(x))
 _extract_doc(x::Markdown.Paragraph) = _extract_doc(x.content)
 _extract_doc(x::String) = x
-
-function propdoc(::T) where {T}
-    pnames = assigned_properties(T)
-    return NamedTuple{pnames}(([propdoc(sym2prop(T, p)) for p in pnames]...,))
-end
 
 """
     propconvert(p, v[, context])
@@ -115,13 +113,17 @@ prop2field(::Type{T}, ::AbstractProperty) where {T} = nothing
     sym2prop(x, sym) -> AbstractProperty
 
 Given the `x` and symbol `sym` returns the corresponding property. If no
-corresponding property is found then `NoProperty` is returned.
+corresponding property is found then `NotProperty` is returned.
 """
 sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 sym2prop(::Type{T}, s::Symbol) where {T} = not_property
 
 """
-    sym2optional
+    sym2optional(x, sym)
+
+Search the optional properties of `x` for `sym` and returns the corresponding
+property if successful. If no corresponding property is found then `NotProperty`
+is returned.
 """
 sym2optional(::T, s::Symbol) where {T} = sym2optional(T, s)
 function sym2optional(::Type{T}, s::Symbol) where {T}
@@ -131,7 +133,5 @@ function sym2optional(::Type{T}, s::Symbol) where {T}
     return not_property
 end
 
-"""
-Indicates the absence of a property.
-"""
+"NotProperty - Indicates the absence of a property."
 @defprop NotProperty{:not_property}

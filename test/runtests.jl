@@ -63,6 +63,9 @@ end
     m.description = "bar"
     @test @inferred(description(m)) == "bar"
     @test @inferred(encapsulated_getproperty(m)) == "bar"
+
+    @test propdoc(description) == "Description that may say whatever you like."
+    @test propdoc(MyProperties) == (description = "Description that may say whatever you like.",)
 end
 
 @testset "DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
