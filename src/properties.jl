@@ -15,8 +15,6 @@ See [`@defprop`](@ref), [`@assignprops`](@ref)
 """
 abstract type AbstractProperty{name,T} <: Function end
 
-Base.propertynames(::AbstractProperty) = (:getter, :setter)
-
 Base.show(io::IO, p::AbstractProperty) = _show_property(io, p)
 Base.show(io::IO, ::MIME"text/plain", p::AbstractProperty) = _show_property(io, p)
 
