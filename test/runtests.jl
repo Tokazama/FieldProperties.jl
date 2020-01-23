@@ -1,5 +1,7 @@
 using FieldProperties, Test
-using FieldProperties: getter, setter!
+using FieldProperties: getter, setter!, propconvert
+
+include("properties_tests.jl")
 
 mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_description::String
@@ -12,42 +14,6 @@ end
     :my_properties => dictextension)
 
 m = MyProperties("", Dict{Symbol,Any}())
-
-@defprop Property1{:prop1}
-
-@defprop Property2{:prop2}::Int
-
-@defprop Property3{:prop3}::Int=1
-
-@defprop Property4{:prop4}=1
-
-@testset "Property interface" begin
-    @test propname(prop1) == :prop1
-    #@test propdefault(prop1) == NotProperty
-    @test proptype(prop1) <: Any
-
-    @test propname(prop2) == :prop2
-    #@test propdefault(prop2) == NotProperty
-    @test proptype(prop2) <: Int
-
-    @test propname(prop3) == :prop3
-    @test propdefault(prop3) == 1
-    @test proptype(prop3) <: Int
-
-    @test propname(prop4) == :prop4
-    @test propdefault(prop4) == 1
-    @test proptype(prop4) <: Any
-
-    FieldProperties.propdefault(::Type{<:Property4}, ::AbstractString) = "1"
-    FieldProperties.proptype(::Type{<:Property4}, ::AbstractString) = String
-
-    @test prop4(2) == 1
-    @test prop4("foo") == "1"
-
-    @test propname(description) == :description
-    @test propdefault(description) == FieldProperties.not_property
-    @test proptype(description) <: String
-end
 
 @testset "@property Description{:description}::String" begin
     encapsulated_getproperty(x) = getproperty(x, :description)
@@ -117,4 +83,4 @@ end
 
 
 
-include("metadata.jl")
+include("metadata_tests.jl")

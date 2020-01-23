@@ -19,5 +19,5 @@ end
     @test @inferred(isnothing(iterate(np)))
     @test @inferred(isnothing(iterate(np, 1)))
 
-    @test_throws ErrorException getproperty(np, :bar)
+    @test_throws MethodError setindex!(np, :bar, 1)
 end

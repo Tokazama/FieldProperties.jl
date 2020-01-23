@@ -23,7 +23,7 @@ function _show_property(io, p::AbstractProperty{name,Getter}) where {name}
     if nms == 1
         print(io, "$(propname(p)) (generic function with 1 method)")
     else
-        print(io, "$(propname(p)) (generic function with $nms method)")
+        print(io, "$(propname(p)) (generic function with $nms methods)")
     end
 end
 function _show_property(io, p::AbstractProperty{name,Setter}) where {name}
@@ -31,7 +31,7 @@ function _show_property(io, p::AbstractProperty{name,Setter}) where {name}
     if nms == 1
         print(io, "$(name)! (generic function with 1 method)")
     else
-        print(io, "$(name)! (generic function with $nms method)")
+        print(io, "$(name)! (generic function with $nms methods)")
     end
 end
 
@@ -61,7 +61,8 @@ propdefault(::Type{<:AbstractProperty}, context) = not_property
 Return the appropriate type for property `p` given `context`. This method allows
 unique type restrictions given different types for `context`.
 """
-proptype(p::AbstractProperty) = proptype(typeof(p), not_property)
+proptype(p::AbstractProperty) = proptype(typeof(p))
+proptype(::Type{P}) where {P<:AbstractProperty} = proptype(P, not_property)
 proptype(p::AbstractProperty, context) = proptype(typeof(p), context)
 proptype(::Type{<:AbstractProperty}, context) = Any
 
@@ -90,12 +91,11 @@ Ensures the `v` is the appropriate type for property `p` given `x`. If it isn't
 then `propconvert` attempts to convert to the "correct type". The "correct type"
 is determined by `proptype(p, x)`.
 """
-propconvert(p::AbstractProperty, v) = propconvert(p, propnam(p), v)
-propconvert(p::AbstractProperty, v, x) = propconvert(p, prop2field(x, p), v, x)
-propconvert(p, s, v) = _propconvert(p, s, v, proptype(p))
-propconvert(p, s, v, x) = _propconvert(p, s, v, proptype(p, x))
-_propconvert(p, s, v::V, ::Type{T}) where {T,V<:T} = v
-_propconvert(p, s, v::V, ::Type{T}) where {T,V} = convert(T, v)
+propconvert(p::AbstractProperty, v) = propconvert(p, propname(p), v)
+propconvert(p::AbstractProperty, s, v) = _propconvert(p, s, v, proptype(p))
+propconvert(p::AbstractProperty, s, v, x) = _propconvert(p, s, v, proptype(p, x))
+_propconvert(p::AbstractProperty, s, v::V, ::Type{T}) where {T,V<:T} = v
+_propconvert(p::AbstractProperty, s, v::V, ::Type{T}) where {T,V} = convert(T, v)
 
 """
     prop2field(x, p) -> Symbol
