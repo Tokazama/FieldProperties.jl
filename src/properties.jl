@@ -49,7 +49,9 @@ propname(::P) where {P} = propname(P)
 propname(::Type{<:AbstractProperty{name}}) where {name} = name
 
 """
-    propdefault(property, context)
+    propdefault(p[, c])
+
+Returns the default value for property `p` given the optinal context `c`.
 """
 propdefault(p::AbstractProperty) = propdefault(p, not_property)
 propdefault(::Type{P}) where {P<:AbstractProperty} = propdefault(P, not_property)

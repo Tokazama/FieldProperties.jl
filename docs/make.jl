@@ -14,7 +14,8 @@ makedocs(;
             "finicky_api.md",
             "adapting_existing_properties.md",
             "stacking_properties.md"
-        ]
+        ],
+        "internal.md"
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",
     sitename="FieldProperties.jl",

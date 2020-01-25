@@ -1,22 +1,5 @@
 # Creating Properties
 
-## Components of a property
-
-<p style="font-size:1.5em; text-align:center">
-<span>Property</span>
-{<span style="color:#2196f3">name</span>} ::
-<span style="color:#3f51b5">Type</span> =
-<span style="color:#f44336">default value</span>
-</p>
-
-* Property :
-* {<span style="color:#2196f3">name</span>} :
-* ::<span style="color:#3f51b5">Type</span> :
-* <span style="color:#f44336">default value</span> :
-
-
-## Examples
-
 Properties can be defined with varying degrees of specificity.
 ```julia
 julia> @defprop Property1{:prop1}
