@@ -30,7 +30,7 @@ Base.length(m::AbstractMetadata) = length(propertynames(m))
 
 Base.getkey(m::AbstractMetadata, k, default) = getkey(dictextension(m), k, default)
 
-Base.keys(m::AbstractMetadata) = propertynames(dictextension(m))
+Base.keys(m::AbstractMetadata) = propertynames(m)
 
 suppress(m::AbstractMetadata) = get(m, :suppress, ())
 

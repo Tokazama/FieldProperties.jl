@@ -7,7 +7,7 @@ makedocs(;
         "Home" => "index.md",
         "Manual" => Any[
             "creating_properties.md",
-            "structures_with_properties.md"
+            "structures_with_properties.md",
             "internal_design.md"
         ],
         "Examples" => Any[

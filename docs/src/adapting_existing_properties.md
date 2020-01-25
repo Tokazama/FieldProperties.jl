@@ -1,21 +1,17 @@
-# Examples
+# Changing A Property's Behavior
 
+If a previously defined property needs a different type or default output, we can just create unique `proptype` and `propdefault` methods.
 
-## Using Existing Properties
-
-Let's say someone creates a package with the following code.
 ```julia
-module SmallModule
+julia> @defprop Property3{:prop3}::Int=1
 
-using FieldProperties
+julia> struct MyStruct end
 
-export prop1
+julia> FieldProperties.proptype(::Type{<:Property3}, ::Type{<:MyStruct}) = String
 
-@defprop Prop1{:prop1}::Int=1
-
-end
+julia> FieldProperties.propdefault(::Type{<:Property3}, ::Type{<:MyStruct}) = ""
 ```
 
-`prop1` will always 
+`MyStruct` isn't particularly interesting but it could contain, nested property fields, a dictionary for optional properties, or just fields for `prop3`. In such cases it's common to use something like `prop3(x::MyStruct) = get(x, :prop3, "")` to ensue a dictionary still returns something appropriate. However, this doesn't provide type stability, check nested fields for the property, or automatically convert returned values to the appropriate type.
 
-If another package defines a property but you want the same syntax and support for your custom type 
+TODO: more detail

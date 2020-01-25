@@ -118,21 +118,6 @@ sym2prop(::T, s::Symbol) where {T} = sym2prop(T, s)
 sym2prop(::Type{T}, s::Symbol) where {T} = not_property
 
 """
-    sym2optional(x, sym)
-
-Search the optional properties of `x` for `sym` and returns the corresponding
-property if successful. If no corresponding property is found then `NotProperty`
-is returned.
-"""
-sym2optional(::T, s::Symbol) where {T} = sym2optional(T, s)
-function sym2optional(::Type{T}, s::Symbol) where {T}
-    for op in optional_properties(T)
-        propname(op) === s && return op
-    end
-    return not_property
-end
-
-"""
     assigned_fields(x) -> Tuple{Vararg{Symbol}}
 
 Returns the fields labeled as with any property except `NestedProperty` using

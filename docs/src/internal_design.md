@@ -1,5 +1,4 @@
-
-## Internals Property Design
+# Internals Design
 
 The fully defined property `@defprop PropertyType{:prop}::T=D` has 4 components
 * `PropertyType`: conrete subtype of `AbstractProperty`
