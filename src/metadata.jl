@@ -51,7 +51,7 @@ end
 function Base.iterate(m::AbstractMetadata, state=1)
     out = iterate_struct(m, state)
     if isnothing(out)
-        np = length(assigned_properties(m))
+        np = length(assigned_fields(m))
         out = iterate(dictextension(m), state - np)
         if isnothing(out)
             return nothing
@@ -65,7 +65,7 @@ function Base.iterate(m::AbstractMetadata, state=1)
 end
 
 @inline function iterate_struct(m::AbstractMetadata, state = 1)
-    pnames = assigned_properties(m)
+    pnames = assigned_fields(m)
     if state > length(pnames)
         return nothing
     else

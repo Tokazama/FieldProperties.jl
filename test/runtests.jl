@@ -1,5 +1,5 @@
 using FieldProperties, Test
-using FieldProperties: getter, setter!, propconvert
+using FieldProperties: getter, setter!, propconvert, not_property
 
 include("properties_tests.jl")
 
@@ -59,7 +59,7 @@ Base.getindex(m::MyArray, i...) = getindex(parent(m), i...)
     :my_properties => dictextension(calmax))
 
 get_flag(x, p) = first(getter(x, p))
-nested_get_flag(x) = get_flag(x, :calmax)
+nested_get_flag(x) = first(getter(x, :calmax))
 @testset "Optional properties" begin
     a = rand(4,4);
     my_min = (maximum(a) - minimum(a)) / 2
@@ -84,3 +84,4 @@ end
 
 
 include("metadata_tests.jl")
+include("nested_tests.jl")

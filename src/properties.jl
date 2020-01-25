@@ -1,10 +1,3 @@
-
-"Setter - Type indicating that an instance of an `AbstractProperty` sets a properties."
-struct Setter end
-
-"Getter - Type indicating that an instance of an `AbstractProperty` is a retreives properties."
-struct Getter end
-
 """
     AbstractProperty{name}
 
@@ -15,23 +8,31 @@ See [`@defprop`](@ref), [`@assignprops`](@ref)
 """
 abstract type AbstractProperty{name,T} <: Function end
 
+"NotProperty - Indicates the absence of a property."
+struct NotProperty <: AbstractProperty{:not_property,nothing} end
+const not_property = NotProperty()
+(::NotProperty)(x, s) = error("type $(typeof(x).name) does not have property $s")
+
+
+is_not_property(x) = x === not_property
+
 Base.show(io::IO, p::AbstractProperty) = _show_property(io, p)
 Base.show(io::IO, ::MIME"text/plain", p::AbstractProperty) = _show_property(io, p)
 
-function _show_property(io, p::AbstractProperty{name,Getter}) where {name}
-    nms = length(methods(p).ms)
-    if nms == 1
-        print(io, "$(propname(p)) (generic function with 1 method)")
-    else
-        print(io, "$(propname(p)) (generic function with $nms methods)")
-    end
+_fxnname(p::AbstractProperty{name,setproperty!}) where {name} = Symbol(name, :!)
+_fxnname(p::AbstractProperty{name,getproperty}) where {name} = name
+_fxnname(p::AbstractProperty{name,nothing}) where {name} = name
+_fxnname(p::AbstractProperty{name,fxn}) where {name,fxn} = "$name($fxn)"
+
+function _show_property(io, p::AbstractProperty)
+    return __show_property(io, _fxnname(p), length(methods(p)))
 end
-function _show_property(io, p::AbstractProperty{name,Setter}) where {name}
-    nms = length(methods(p).ms)
-    if nms == 1
-        print(io, "$(name)! (generic function with 1 method)")
+
+function __show_property(io, fxnname, nmethods)
+    if nmethods == 1
+        print(io, "$fxnname (generic function with 1 method)")
     else
-        print(io, "$(name)! (generic function with $nms methods)")
+        print(io, "$fxnname (generic function with $nmethods methods)")
     end
 end
 
@@ -74,7 +75,7 @@ Returns documentation for property `x`.
 propdoc(::T) where {T} = propdoc(T)
 propdoc(::Type{P}) where {P<:AbstractProperty} = _extract_doc(Base.Docs.doc(P))
 function propdoc(::Type{T}) where {T}
-    pnames = assigned_properties(T)
+    pnames = assigned_fields(T)
     return NamedTuple{pnames}(([propdoc(sym2prop(T, p)) for p in pnames]...,))
 end
 
@@ -131,5 +132,50 @@ function sym2optional(::Type{T}, s::Symbol) where {T}
     return not_property
 end
 
-"NotProperty - Indicates the absence of a property."
-@defprop NotProperty{:not_property}
+"""
+    assigned_fields(x) -> Tuple{Vararg{Symbol}}
+
+Returns the fields labeled as with any property except `NestedProperty` using
+`@assignprops`. 
+"""
+assigned_fields(::T) where {T} = assigned_fields(T)
+assigned_fields(::Type{T}) where {T} = ()
+
+@inline function _propertynames(x)
+    Base.@_inline_meta
+    if has_nested_fields(x)
+        if has_dictextension(x)
+            return (public_fields(x)...,
+                    assigned_fields(x)...,
+                    nested_propertynames(x)...,
+                    keys(dictextension(x))...)
+        else
+            return (public_fields(x)...,
+                    assigned_fields(x)...,
+                    nested_propertynames(x)...)
+        end
+    else
+        if has_dictextension(x)
+            return (public_fields(x)...,
+                    assigned_fields(x)...,
+                    keys(dictextension(x))...)
+        else
+            return (public_fields(x)..., assigned_fields(x)...)
+        end
+    end
+end
+
+@inline nested_propertynames(x) = _nested_propertynames(x, nested_fields(x))
+function _nested_propertynames(x, fields::Tuple)
+    return (propertynames(getfield(x, first(fields)))..., _nested_propertynames(x, Base.tail(fields))...)
+end
+_nested_propertynames(x, fields::Tuple{Symbol}) = propertynames(getfield(x, first(fields)))
+
+
+# this helps use generic code everywhere else when we could be using a property
+# or propertyname
+_propname(p::Symbol) = p
+_propname(p::AbstractProperty) = propname(p)
+
+_iseq(p1, p2) = _propname(p1) === _propname(p2)
+

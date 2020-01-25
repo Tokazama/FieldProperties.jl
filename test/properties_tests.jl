@@ -107,14 +107,9 @@ end
 
 @testset "Print single method" begin
     io = IOBuffer()
-    show(io, prop4)
+    show(io, not_property)
     str = String(take!(io))
-    @test str == "prop4 (generic function with 1 method)"
-
-    io = IOBuffer()
-    show(io, prop4!)
-    str = String(take!(io))
-    @test str == "prop4! (generic function with 1 method)"
+    @test str == "not_property (generic function with 1 method)"
 end
 
 prop4(::Nothing) = nothing
@@ -123,10 +118,10 @@ prop4!(::Nothing, val) = nothing
     io = IOBuffer()
     show(io, prop4)
     str = String(take!(io))
-    @test str == "prop4 (generic function with 2 methods)"
+    @test str == "prop4 (generic function with $(length(methods(prop4))) methods)"
 
     io = IOBuffer()
     show(io, prop4!)
     str = String(take!(io))
-    @test str == "prop4! (generic function with 2 methods)"
+    @test str == "prop4! (generic function with $(length(methods(prop4!))) methods)"
 end

@@ -20,7 +20,6 @@ export
     NotProperty,
     Metadata,
     NoopMetadata,
-    NestedProperty,
     AbstractProperty,
     # Macros
     @defprop,
@@ -33,6 +32,7 @@ export
     description,
     description!,
     dictextension,
+    nested,
     propdefault,
     propdoc,
     propname,
@@ -45,8 +45,10 @@ export
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
+include("public.jl")
+include("nested.jl")
 include("dictextension.jl")
-include("nested_properties.jl")
+include("optional.jl")
 include("getter.jl")
 include("setter.jl")
 include("general.jl")
