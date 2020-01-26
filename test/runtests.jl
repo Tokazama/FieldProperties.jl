@@ -36,7 +36,7 @@ end
 
 
 
-@testset "DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
+@testset "setter!(x, p::NotProperty, s::Symbol, val)" begin
     # Note: we don't have specifiers on these so we can't expect inferrible types
     m.foo = ""
     @test m.foo == ""
@@ -44,10 +44,17 @@ end
     @test_throws ErrorException("type MyProperties does not have property bar") getproperty(m, :bar)
 end
 
+@testset "setter!(x, p::AbstractProperty, ::Nothing, val)" begin
+    m = Metadata()
+    calmax!(m, 2)
+    @test calmax(m) == 2
+end
+
 include("metadata_tests.jl")
 
 struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
     _parent::P
+    public_property::Bool
     my_calmin::T
     my_properties::M
 end
@@ -59,6 +66,7 @@ Base.getindex(m::MyArray, i...) = getindex(parent(m), i...)
 
 @assignprops(
     MyArray,
+    :public_property => public,
     :my_calmin => calmin,
     :my_properties => dictextension(calmax))
 
@@ -67,7 +75,7 @@ nested_get_flag(x) = first(getter(x, :calmax))
 @testset "Optional properties" begin
     a = rand(4,4);
     my_min = (maximum(a) - minimum(a)) / 2
-    my_a = MyArray(a, my_min, Dict{Symbol,Any}());
+    my_a = MyArray(a, true, my_min, Dict{Symbol,Any}());
 
     @test @inferred(proptype(calmax, my_a)) <: eltype(a)
     @test @inferred(get_flag(my_a, calmax)) == calmax

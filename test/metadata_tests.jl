@@ -40,3 +40,22 @@ end
 
     @test_throws ErrorException setindex!(np, 1, :bar)
 end
+
+m = Metadata()
+m.foo = 1
+m.bar = 2
+m.suppress = (:foo,)
+
+@testset "Print Metadata" begin
+   io = IOBuffer()
+    show(io, m)
+
+    x="""
+    Metadata{Dict{Symbol,Any}} with 3 entries
+        bar: 2
+        suppress: (:foo,)
+        foo: <suppressed>"""
+
+    str = String(take!(io))
+    @test str == x
+end

@@ -50,8 +50,6 @@ function showdictlines(io::IO, m, suppress)
     end
 end
 
-MetadataIterator(x) = MetadataIterator(1, 1, ones(nnested(ones)), 1)
-
 Base.iterate(m::AbstractMetadata, state=1) = _iterate_properties(m, state)
 
 """

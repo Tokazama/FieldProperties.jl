@@ -125,3 +125,5 @@ prop4!(::Nothing, val) = nothing
     str = String(take!(io))
     @test str == "prop4! (generic function with $(length(methods(prop4!))) methods)"
 end
+
+@test FieldProperties.optional_properties(Int) == ()
