@@ -31,7 +31,7 @@ function chain_ifelse!(blk::Expr, condition::Expr, trueout)
         elseif length(blk.args) == 2
             push!(blk.args, Expr(:elseif, condition, trueout))
         else
-            chain_ifelse!(blk.args[end], condition, )
+            chain_ifelse!(blk.args[end], condition, trueout)
         end
     elseif blk.head === :elseif
         if blk.args[end] isa Expr
@@ -58,7 +58,7 @@ function final_out!(blk, r)
     end
 end
 
-to_property_name(rhs::Symbol) = Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), rhs)
+to_property_name(rhs::Symbol) = Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), esc(rhs))
 # where :(Property(OptionalProperties))
 to_property_name(rhs::Expr) = to_property_name(rhs.args[1])
 to_property_name(rhs::QuoteNode) = to_property_name(rhs.value)
