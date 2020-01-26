@@ -24,9 +24,9 @@ Property providing name for parent structure.
 """
 Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.
 """
-@defprop CalibrationMaximum{:calmax}::(x->eltype(x))=x->maximum(x)
+@defprop CalibrationMaximum{:calmax}::(x::Type{<:AbstractArray}->eltype(x))=x->maximum(x)
 
 """
 Specifies minimum element for display purposes. If not specified returns the minimum value in the collection.
 """
-@defprop CalibrationMinimum{:calmin}::(x->eltype(x))=x->minimum(x)
+@defprop CalibrationMinimum{:calmin}::(x::Type{<:AbstractArray}->eltype(x))=x->minimum(x)
