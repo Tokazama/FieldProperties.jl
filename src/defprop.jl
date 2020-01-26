@@ -5,15 +5,17 @@ function _defprop(d, t, name::Symbol, struct_name::Expr)
     T = esc(:T)
 
     blk = Expr(:block)
-    push!(blk.args, :($struct_name(f::Function) = $struct_name{f}()))
-    push!(blk.args, :((::$struct_name)(f::Function) = $struct_name{f}()))
+    push!(blk.args, Expr(:(=),
+                         Expr(:call, struct_name, Expr(:(::), esc(:f), esc(:Function))),
+                         Expr(:call, Expr(:curly, struct_name, esc(:f)))))
+    push!(blk.args, Expr(:(=),
+                         Expr(:call, Expr(:(::), struct_name), Expr(:(::), esc(:f), esc(:Function))),
+                         Expr(:call, Expr(:curly, struct_name, esc(:f)))))
     push!(blk.args, :(const $getter_fxn = $struct_name{$(esc(:getproperty))}()))
     push!(blk.args, :(const $setter_fxn = $struct_name{$(esc(:setproperty!))}()))
-    push!(blk.args, :(FieldProperties.get_setter(::Type{<:$struct_name}) = $setter_fxn))
-    push!(blk.args, :(FieldProperties.get_getter(::Type{<:$struct_name}) = $getter_fxn))
     _add_propdefault!(blk, d, struct_name)
     _add_proptype!(blk, t, struct_name)
-    return :(struct $(struct_name){$T} <: FieldProperties.AbstractProperty{$sym_name,$T} end), blk
+    return :(struct $(struct_name){$T} <: $(esc(Expr(:., :FieldProperties, QuoteNode(:AbstractProperty)))){$sym_name,$T} end), blk
 end
 
 _defprop(d, t, name::QuoteNode, struct_name::Symbol) = _defprop(d, t, name.value, esc(struct_name))
@@ -53,20 +55,53 @@ end
 _add_propdefault!(blk::Expr, ::Nothing, const_type) = nothing
 function _add_propdefault!(blk::Expr, expr, const_type)
     if expr isa Tuple
-        push!(blk.args, :(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(expr[1]))) = $(esc(expr[2]))))
+        push!(blk.args, Expr(:(=),
+                             Expr(:call,
+                                  esc(Expr(:., :FieldProperties, QuoteNode(:propdefault))),
+                                  _type(const_type),
+                                  esc(expr[1])
+                             ),
+                             esc(expr[2])
+                        )
+             )
     else
-        push!(blk.args, :(FieldProperties.propdefault(::Type{<:$const_type}, $(esc(:x))) = $(esc(expr))))
+        push!(blk.args, Expr(:(=),
+                             Expr(:call,
+                                  esc(Expr(:., :FieldProperties, QuoteNode(:propdefault))),
+                                  _type(const_type),
+                                  esc(:x)
+                             ),
+                             esc(expr)
+                        )
+             )
     end
 end
 
 _add_proptype!(blk::Expr, ::Nothing, const_type) = nothing
 function _add_proptype!(blk::Expr, expr, const_type)
     if expr isa Tuple
-        push!(blk.args, :(FieldProperties.proptype(::Type{<:$const_type}, $(esc(expr[1]))) = $(esc(expr[2]))))
+        push!(blk.args, Expr(:(=),
+                             Expr(:call,
+                                  esc(Expr(:., :FieldProperties, QuoteNode(:proptype))),
+                                  _type(const_type),
+                                  esc(expr[1])
+                             ),
+                             esc(expr[2])
+                        )
+             )
     else
-        push!(blk.args, :(FieldProperties.proptype(::Type{<:$const_type}, $(esc(:x))) = $(esc(expr))))
+        push!(blk.args, Expr(:(=),
+                             Expr(:call,
+                                  esc(Expr(:., :FieldProperties, QuoteNode(:proptype))),
+                                  _type(const_type),
+                                  esc(:x)
+                             ),
+                             esc(expr)
+                        )
+             )
     end
 end
+
 
 
 """

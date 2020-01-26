@@ -36,9 +36,9 @@ function __show_property(io, fxnname, nmethods)
     end
 end
 
-get_setter(::P) where {P<:AbstractProperty} = get_setter(P)
+get_setter(p::AbstractProperty) = p(setproperty!)
 
-get_getter(::P) where {P<:AbstractProperty} = get_getter(P)
+get_getter(p::AbstractProperty) = p(getproperty)
 
 """
     propname(::AbstractProperty) -> Symbol
