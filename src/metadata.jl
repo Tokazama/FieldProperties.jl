@@ -26,7 +26,9 @@ Base.delete!(m::AbstractMetadata, k) = delete!(dictextension(m), k)
     return setindex!(dictextension(x), val, s)
 end
 
-Base.length(m::AbstractMetadata) = length(propertynames(m))
+function Base.length(m::AbstractMetadata)
+    return length(public_fields(m)) + length(assigned_fields(m)) + length(dictextension(m))
+end
 
 Base.getkey(m::AbstractMetadata, k, default) = getkey(dictextension(m), k, default)
 
@@ -48,31 +50,9 @@ function showdictlines(io::IO, m, suppress)
     end
 end
 
-function Base.iterate(m::AbstractMetadata, state=1)
-    out = iterate_struct(m, state)
-    if isnothing(out)
-        np = length(assigned_fields(m))
-        out = iterate(dictextension(m), state - np)
-        if isnothing(out)
-            return nothing
-        else
-            k, i = out
-            return k, i + np
-        end
-    else
-        return out
-    end
-end
+MetadataIterator(x) = MetadataIterator(1, 1, ones(nnested(ones)), 1)
 
-@inline function iterate_struct(m::AbstractMetadata, state = 1)
-    pnames = assigned_fields(m)
-    if state > length(pnames)
-        return nothing
-    else
-        p = @inbounds(pnames[state])
-        return Pair(p, getproperty(m, p)), state + 1
-    end
-end
+Base.iterate(m::AbstractMetadata, state=1) = _iterate_properties(m, state)
 
 """
     NoopMetadata

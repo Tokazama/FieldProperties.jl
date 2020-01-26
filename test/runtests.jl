@@ -34,6 +34,8 @@ m = MyProperties("", Dict{Symbol,Any}())
     @test propdoc(MyProperties) == (description = "Description that may say whatever you like.",)
 end
 
+
+
 @testset "DictExtension{:dictproperty}::AbstractDict{Symbol}" begin
     # Note: we don't have specifiers on these so we can't expect inferrible types
     m.foo = ""
@@ -41,6 +43,8 @@ end
 
     @test_throws ErrorException("type MyProperties does not have property bar") getproperty(m, :bar)
 end
+
+include("metadata_tests.jl")
 
 struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
     _parent::P
@@ -83,5 +87,4 @@ end
 
 
 
-include("metadata_tests.jl")
 include("nested_tests.jl")

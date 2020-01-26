@@ -159,6 +159,11 @@ end
 _nested_propertynames(x, fields::Tuple{Symbol}) = propertynames(getfield(x, first(fields)))
 
 
+function nproperties(x)
+    Base.@_inline_meta
+    return length(propertynames(x))
+end
+
 # this helps use generic code everywhere else when we could be using a property
 # or propertyname
 _propname(p::Symbol) = p
@@ -166,3 +171,9 @@ _propname(p::AbstractProperty) = propname(p)
 
 _iseq(p1, p2) = _propname(p1) === _propname(p2)
 
+function _iterate_properties(x, i=1)
+    Base.@_inline_meta
+    i > nproperties(x) && return nothing
+    p = @inbounds(propertynames(x)[i])
+    return (p => getproperty(x, p), i + 1)
+end

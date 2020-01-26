@@ -242,8 +242,6 @@ function def_has_dictextension(struct_type)
     )
 end
 
-
-
 function __assignprops(
     struct_type,   # type being defined
     ap,            # assigned properties
@@ -286,7 +284,6 @@ function __assignprops(
 
     return blk
 end
-
 
 function _assignprops(ex, fields...)
     struct_type = esc(ex)
