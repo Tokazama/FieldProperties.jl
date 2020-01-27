@@ -10,7 +10,7 @@ function get_optional_properties_expr!(a, x::Expr)
     end
 end
 
-get_optional_properties_expr!(a, x::AbstractArray) = append!(a, x[2:end])
+get_optional_properties_expr!(a, x::AbstractArray) = append!(a, esc.(x[2:end]))
 
 function parse_assignment(x::Expr)
     if x.head === :call
@@ -34,10 +34,10 @@ function chain_ifelse!(blk::Expr, condition::Expr, trueout)
             chain_ifelse!(blk.args[end], condition, trueout)
         end
     elseif blk.head === :elseif
-        if blk.args[end] isa Expr
-            chain_ifelse!(blk.args[end], condition, trueout)
-        else
+        if length(blk.args) == 2
             push!(blk.args, Expr(:elseif, condition, trueout))
+        else
+            chain_ifelse!(blk.args[end], condition, trueout)
         end
     end
 end
@@ -125,11 +125,7 @@ function def_sym2prop(struct_type, p, f)
     for (f_i, p_i) in zip(f,p)
         chain_ifelse!(
             blk,
-            Expr(:call,
-                 :(===),
-                 to_property_name(p_i),
-                 esc(:s)
-            ),
+            Expr(:call, :(===), to_property_name(p_i), esc(:s)),
             Expr(:return, esc(to_property(p_i)))
         )
     end
@@ -158,7 +154,6 @@ function def_prop2field(struct_type, p, f)
             Expr(:return, f_i)
        )
     end
-
     final_out!(blk, Expr(:return, esc(:nothing)))
     Expr(:function,
          Expr(:call,

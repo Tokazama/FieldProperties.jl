@@ -49,58 +49,6 @@ propname(::P) where {P} = propname(P)
 propname(::Type{<:AbstractProperty{name}}) where {name} = name
 
 """
-    propdefault(p[, c])
-
-Returns the default value for property `p` given the optinal context `c`.
-"""
-propdefault(p::AbstractProperty) = propdefault(p, not_property)
-propdefault(::Type{P}) where {P<:AbstractProperty} = propdefault(P, not_property)
-propdefault(p::AbstractProperty, context) = propdefault(typeof(p), context)
-propdefault(::Type{<:AbstractProperty}, context) = not_property
-
-"""
-    proptype(p[, context]) -> Type
-
-Return the appropriate type for property `p` given `context`. This method allows
-unique type restrictions given different types for `context`.
-"""
-proptype(p::AbstractProperty) = proptype(typeof(p))
-proptype(::Type{P}) where {P<:AbstractProperty} = proptype(P, not_property)
-proptype(p::AbstractProperty, context) = proptype(typeof(p), context)
-proptype(::Type{<:AbstractProperty}, context) = Any
-
-"""
-    propdoc(x)
-
-Returns documentation for property `x`.
-"""
-propdoc(::T) where {T} = propdoc(T)
-propdoc(::Type{P}) where {P<:AbstractProperty} = _extract_doc(Base.Docs.doc(P))
-function propdoc(::Type{T}) where {T}
-    pnames = assigned_fields(T)
-    return NamedTuple{pnames}(([propdoc(sym2prop(T, p)) for p in pnames]...,))
-end
-
-_extract_doc(x::Markdown.MD) = _extract_doc(x.content)
-_extract_doc(x::AbstractArray) = isempty(x) ? "" : _extract_doc(first(x))
-_extract_doc(x::Markdown.Paragraph) = _extract_doc(x.content)
-_extract_doc(x::String) = x
-
-"""
-    propconvert(p, v[, context])
-    propconvert(p, s, v[, context])
-
-Ensures the `v` is the appropriate type for property `p` given `x`. If it isn't
-then `propconvert` attempts to convert to the "correct type". The "correct type"
-is determined by `proptype(p, x)`.
-"""
-propconvert(p::AbstractProperty, v) = propconvert(p, propname(p), v)
-propconvert(p::AbstractProperty, s, v) = _propconvert(p, s, v, proptype(p))
-propconvert(p::AbstractProperty, s, v, x) = _propconvert(p, s, v, proptype(p, x))
-_propconvert(p::AbstractProperty, s, v::V, ::Type{T}) where {T,V<:T} = v
-_propconvert(p::AbstractProperty, s, v::V, ::Type{T}) where {T,V} = convert(T, v)
-
-"""
     prop2field(x, p) -> Symbol
 
 Given the `x` and property `p` returns the symbol corresponding to the field

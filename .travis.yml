@@ -17,5 +17,5 @@ notifications:
     email: false
 
 after_success:
-  - julia -e 'cd(Pkg.dir("MetadataUtils")); Pkg.add("Coverage"); using Coverage;
+  - julia -e 'cd(Pkg.dir("FieldProperties")); Pkg.add("Coverage"); using Coverage;
               Codecov.submit(Codecov.process_folder())'

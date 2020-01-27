@@ -35,6 +35,7 @@ export
     nested,
     propdefault,
     propdoc,
+    propdoclist,
     propname,
     proptype,
     status,
@@ -45,6 +46,10 @@ export
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
+include("proptype.jl")
+include("propdefault.jl")
+include("propconvert.jl")
+include("propdoc.jl")
 include("public.jl")
 include("nested.jl")
 include("dictextension.jl")
