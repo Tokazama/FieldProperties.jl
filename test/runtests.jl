@@ -1,6 +1,7 @@
 using FieldProperties, Test
 using FieldProperties: getter, setter!, propconvert, not_property
 
+include("macro_composability.jl")
 include("properties_tests.jl")
 
 mutable struct MyProperties{M} <: AbstractMetadata{M}
@@ -32,9 +33,8 @@ m = MyProperties("", Dict{Symbol,Any}())
 
     @test propdoc(description) == "Description that may say whatever you like."
     @test propdoc(MyProperties) == (description = "Description that may say whatever you like.",)
+    @test propdoclist(MyProperties) == "* description: Description that may say whatever you like.\n"
 end
-
-
 
 @testset "setter!(x, p::NotProperty, s::Symbol, val)" begin
     # Note: we don't have specifiers on these so we can't expect inferrible types

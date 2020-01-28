@@ -20,6 +20,11 @@ end
 
 to_field_name(lhs::QuoteNode) = lhs
 to_field_name(lhs::Symbol) = QuoteNode(lhs)
+function to_field_name(rhs::Expr)
+    if rhs.head === :call && rhs.args[1] == :(=>)
+        return to_field_name(rhs.args[2])
+    end
+end
 
 _type(struct_type) = Expr(:(::), Expr(:curly, esc(:Type), Expr(:<:, struct_type)))
 
@@ -60,16 +65,18 @@ end
 
 to_property_name(rhs::Symbol) = Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), esc(rhs))
 # where :(Property(OptionalProperties))
-to_property_name(rhs::Expr) = to_property_name(rhs.args[1])
+function to_property_name(rhs::Expr)
+    if rhs.head === :call && rhs.args[1] == :(=>)
+        return to_property_name(rhs.args[3])
+    end
+end
 to_property_name(rhs::QuoteNode) = to_property_name(rhs.value)
 
 to_property(rhs::QuoteNode) = rhs.value
 to_property(rhs::Symbol) = rhs
 function to_property(rhs::Expr)
-    if rhs.head == :call  # assume the property is the function doing the calling
-        return to_property(rhs.args[1])
-    else
-        # TODO potential hook
+    if rhs.head === :call && rhs.args[1] == :(=>)
+        return to_property(rhs.args[3])
     end
 end
 
