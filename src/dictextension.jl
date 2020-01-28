@@ -49,9 +49,10 @@ end
 # be enforced early in call (in the `_setproperty!` methods)
 function set_dictextension_property!(x, p, val)
     if has_dictextension(x)
-        return not_property, setindex!(dictextension(x), val, _propname(p))
+        setindex!(dictextension(x), val, _propname(p))
+        return true
     else
-        return not_property, not_property
+        return false
     end
 end
 

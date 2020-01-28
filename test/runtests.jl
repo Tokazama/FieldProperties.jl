@@ -16,6 +16,27 @@ end
 
 m = MyProperties("", Dict{Symbol,Any}())
 
+mutable struct Nested1
+    field1
+    field2
+end
+
+mutable struct Nested2
+    field3
+    field4
+end
+
+struct MultiNest{F1,F2}
+    field1::F1
+    field2::F2
+end
+
+@assignprops(
+    MultiNest,
+    :field1 => nested,
+    :field2 => nested
+)
+
 @testset "@property Description{:description}::String" begin
     encapsulated_getproperty(x) = getproperty(x, :description)
 
@@ -96,3 +117,4 @@ end
 
 
 include("nested_tests.jl")
+include("dictextension_tests.jl")
