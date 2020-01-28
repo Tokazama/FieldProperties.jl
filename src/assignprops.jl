@@ -1,6 +1,6 @@
 
 function get_optional_properties_expr!(a, x::Expr)
-    if x.head == :call
+    if iscall(x)
         if x.args[1] == :(=>)
             return get_optional_properties_expr!(a, x.args[3],)
         elseif is_dictextension(x.args[1])
@@ -13,7 +13,7 @@ end
 get_optional_properties_expr!(a, x::AbstractArray) = append!(a, esc.(x[2:end]))
 
 function parse_assignment(x::Expr)
-    if x.head === :call
+    if iscall(x)
         return x.args[1], x.args[2], x.args[3]
     end
 end
@@ -21,7 +21,7 @@ end
 to_field_name(lhs::QuoteNode) = lhs
 to_field_name(lhs::Symbol) = QuoteNode(lhs)
 function to_field_name(rhs::Expr)
-    if rhs.head === :call && rhs.args[1] == :(=>)
+    if iscall(rhs) && rhs.args[1] == :(=>)
         return to_field_name(rhs.args[2])
     end
 end
@@ -63,66 +63,46 @@ function final_out!(blk, r)
     end
 end
 
-to_property_name(rhs::Symbol) = Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), esc(rhs))
+to_property_name(rhs::Symbol) = callexpr(dotexpr(:FieldProperties, :propname), esc(rhs))
 # where :(Property(OptionalProperties))
-function to_property_name(rhs::Expr)
-    if rhs.head === :call && rhs.args[1] == :(=>)
-        return to_property_name(rhs.args[3])
+function to_property_name(x::Expr)
+    if iscall(x) && x.args[1] == :(=>)
+        return to_property_name(x.args[3])
     end
 end
 to_property_name(rhs::QuoteNode) = to_property_name(rhs.value)
 
 to_property(rhs::QuoteNode) = rhs.value
 to_property(rhs::Symbol) = rhs
-function to_property(rhs::Expr)
-    if rhs.head === :call && rhs.args[1] == :(=>)
-        return to_property(rhs.args[3])
+function to_property(x::Expr)
+    if iscall(x) && x.args[1] == :(=>)
+        return to_property(x.args[3])
     end
 end
 
 # Changes to base functions
 function def_propertynames(struct_type)
-    Expr(:function,
-         Expr(:call, esc(Expr(:., :Base, QuoteNode(:propertynames))),
-              Expr(:(::), esc(:x), struct_type),
-         ),
-         Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:_propertynames))), esc(:x))
+    fxnexpr(
+        callexpr(dotexpr(:Base, :propertynames), var(:x, struct_type)),
+        callexpr(dotexpr(:FieldProperties, :_propertynames), esc(:x))
     )
 end
 
 function def_getproperty(struct_type)
-    Expr(:function,
-         Expr(:call, esc(Expr(:., :Base, QuoteNode(:getproperty))),
-              Expr(:(::), esc(:x), struct_type),
-              Expr(:(::), esc(:s), esc(:Symbol))
-         ),
-         Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:_getproperty))),
-              esc(:x),
-              Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:sym2prop))),
-                   esc(:x),
-                   esc(:s)
-              ),
-              esc(:s)
+    fxnexpr(
+         callexpr(dotexpr(:Base, :getproperty), var(:x, struct_type), var(:s, :Symbol)),
+         callexpr(dotexpr(:FieldProperties, :_getproperty),
+                  esc(:x),
+                  callexpr(dotexpr(:FieldProperties, :sym2prop), esc(:x), esc(:s)), esc(:s)
          )
     )
 end
 
 function def_setproperty(struct_type)
-    Expr(:function,
-         Expr(:call, esc(Expr(:., :Base, QuoteNode(:setproperty!))),
-              Expr(:(::), esc(:x), struct_type),
-              Expr(:(::), esc(:s), esc(:Symbol)),
-              esc(:val)
-         ),
-         Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:_setproperty!))),
-              esc(:x),
-              Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:sym2prop))),
-                   esc(:x),
-                   esc(:s)
-              ),
-              esc(:s),
-              esc(:val)
-         )
+    fxnexpr(
+         callexpr(dotexpr(:Base, :setproperty!), var(:x, struct_type), var(:s, :Symbol), esc(:val)),
+         callexpr(dotexpr(:FieldProperties, :_setproperty!), esc(:x),
+              callexpr(dotexpr(:FieldProperties, :sym2prop), esc(:x), esc(:s)), esc(:s), esc(:val))
     )
 end
 
@@ -132,19 +112,12 @@ function def_sym2prop(struct_type, p, f)
     for (f_i, p_i) in zip(f,p)
         chain_ifelse!(
             blk,
-            Expr(:call, :(===), to_property_name(p_i), esc(:s)),
+            callexpr(:(===), to_property_name(p_i), esc(:s)),
             Expr(:return, esc(to_property(p_i)))
         )
     end
     final_out!(blk, Expr(:return, esc(FieldProperties.not_property)))
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:sym2prop))),
-              _type(struct_type),
-              Expr(:(::), esc(:s), esc(:Symbol))
-         ),
-         blk
-    )
+    fxnexpr(callexpr(dotexpr(:FieldProperties, :sym2prop), _type(struct_type), var(:s, :Symbol)), blk)
 end
 
 function def_prop2field(struct_type, p, f)
@@ -153,23 +126,12 @@ function def_prop2field(struct_type, p, f)
     for (f_i, p_i) in zip(f,p)
         chain_ifelse!(
             blk,
-            Expr(:call,
-                 :(===),
-                 to_property_name(p_i),
-                 Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:propname))), esc(:p))
-            ),
+            callexpr(:(===), to_property_name(p_i), callexpr(dotexpr(:FieldProperties, :propname), esc(:p))),
             Expr(:return, f_i)
        )
     end
     final_out!(blk, Expr(:return, esc(:nothing)))
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:prop2field))),
-              _type(struct_type),
-              Expr(:(::), esc(:p), esc(:AbstractProperty))
-         ),
-         blk
-    )
+    fxnexpr(callexpr(dotexpr(:FieldProperties, :prop2field), _type(struct_type), var(:p, :AbstractProperty)), blk)
 end
 
 # Special field identifiers
@@ -177,71 +139,39 @@ function def_nested_fields(struct_type::Expr, a::Array)
     return def_nested_fields(struct_type, Expr(:tuple, a...))
 end
 function def_nested_fields(struct_type::Expr, f::Expr)
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:nested_fields))),
-              _type(struct_type)
-             ),
-         f
-    )
+    return fxnexpr(callexpr(dotexpr(:FieldProperties, :nested_fields), _type(struct_type)), f)
 end
 
 function def_public_fields(struct_type::Expr, a::Array)
     return def_public_fields(struct_type, Expr(:tuple, a...))
 end
 function def_public_fields(struct_type::Expr, f::Expr)
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:public_fields))),
-              _type(struct_type)
-         ),
-         f
-    )
+    return fxnexpr(callexpr(dotexpr(:FieldProperties, :public_fields), _type(struct_type)), f)
 end
 
 function def_assigned_fields(struct_type::Expr, pn::Array)
     return def_assigned_fields(struct_type, Expr(:tuple, to_property_name.(pn)...))
 end
 function def_assigned_fields(struct_type::Expr, pn::Expr)
-    Expr(:function,
-         Expr(:call, esc(Expr(:., :FieldProperties, QuoteNode(:assigned_fields))),
-              _type(struct_type)
-         ),
-         pn
-    )
+    return fxnexpr(callexpr(dotexpr(:FieldProperties, :assigned_fields), _type(struct_type)), pn)
 end
 
 function def_optional_properties(struct_type, p::Array)
     return def_optional_properties(struct_type, Expr(:tuple, p...))
 end
 function def_optional_properties(struct_type, p::Expr)
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:optional_properties))),
-              _type(struct_type)
-         ),
-         p
-    )
+    return fxnexpr(callexpr(dotexpr(:FieldProperties, :optional_properties), _type(struct_type)), p)
 end
 
 function def_dictextension(struct_type, f::QuoteNode)
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:dictextension))),
-              Expr(:(::), esc(:x), struct_type)
-         ),
-         Expr(:call, esc(:getfield), esc(:x), f)
+    fxnexpr(
+        callexpr(dotexpr(:FieldProperties, :dictextension), var(:x, struct_type)),
+        callexpr(esc(:getfield), esc(:x), f)
     )
 end
 
 function def_has_dictextension(struct_type)
-    Expr(:function,
-         Expr(:call,
-              esc(Expr(:., :FieldProperties, QuoteNode(:has_dictextension))),
-              Expr(:(::), esc(:x), struct_type)
-         ),
-         Expr(:return, true)
-    )
+    fxnexpr(callexpr(dotexpr(:FieldProperties, :has_dictextension), var(:x, struct_type)), Expr(:return, true))
 end
 
 function __assignprops(

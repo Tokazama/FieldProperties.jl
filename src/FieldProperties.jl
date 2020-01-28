@@ -43,6 +43,7 @@ export
     modality,
     modality!
 
+include("macro_utilities.jl")
 include("defprop.jl")
 include("assignprops.jl")
 include("properties.jl")
