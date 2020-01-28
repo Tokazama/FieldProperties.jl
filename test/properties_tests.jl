@@ -127,3 +127,25 @@ prop4!(::Nothing, val) = nothing
 end
 
 @test FieldProperties.optional_properties(Int) == ()
+
+
+struct TestStruct
+    p1
+    p2
+    p3
+    p4
+    p5
+end
+
+@assignprops(
+    TestStruct,
+    :p1 => prop1,
+    :p2 => prop2,
+    :p3 => prop3,
+    :p4 => prop4,
+    :p5 => public
+)
+
+t = TestStruct(1,2,3,4,5)
+
+@test propertynames(t) == (:p5, :prop1,:prop2,:prop3,:prop4)
