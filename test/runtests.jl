@@ -1,6 +1,12 @@
-using FieldProperties, Test
-using FieldProperties: getter, setter!, propconvert, not_property
+using FieldProperties, Test, Documenter
 
+@testset "FieldProperties docs" begin
+    doctest(FieldProperties; manual=false)
+end
+
+include("metadata_tests.jl")
+
+#=
 include("macro_composability.jl")
 include("properties_tests.jl")
 
@@ -9,10 +15,10 @@ mutable struct MyProperties{M} <: AbstractMetadata{M}
     my_properties::M
 end
 
-@assignprops(
-    MyProperties,
-    :my_description => description,
-    :my_properties => dictextension)
+@properties MyProperties begin
+    description => :my_description
+    Any => (:my_properties)
+end
 
 m = MyProperties("", Dict{Symbol,Any}())
 
@@ -71,7 +77,6 @@ end
     @test calmax(m) == 2
 end
 
-include("metadata_tests.jl")
 
 struct MyArray{T,N,P<:AbstractArray{T,N},M<:AbstractDict{Symbol,Any}} <: AbstractArray{T,N}
     _parent::P
@@ -118,3 +123,4 @@ end
 
 include("nested_tests.jl")
 include("dictextension_tests.jl")
+=#

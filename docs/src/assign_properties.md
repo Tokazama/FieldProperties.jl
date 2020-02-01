@@ -1,0 +1,5 @@
+# Assigning Properties
+
+```@docs
+@properties
+```

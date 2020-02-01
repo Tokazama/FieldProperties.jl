@@ -2,34 +2,36 @@
 
 @defprop Property2{:prop2}::Int
 
-@defprop Property3{:prop3}::Int=1
-
-@defprop Property4{:prop4}=1
-
-@testset "Property interface" begin
-    @test propname(prop1) == :prop1
-    #@test propdefault(prop1) == NotProperty
-
-    @test propname(prop2) == :prop2
-    #@test propdefault(prop2) == NotProperty
-
-    @test propname(prop3) == :prop3
-    @test propdefault(prop3) == 1
-
-    @test propname(prop4) == :prop4
-    @test propdefault(prop4) == 1
-
-    FieldProperties.propdefault(::Type{<:Property4}, ::AbstractString) = "1"
-    FieldProperties.proptype(::Type{<:Property4}, ::AbstractString) = String
-
-    @test prop4(2) == 1
-    @test prop4("foo") == "1"
-
-    @test propname(description) == :description
-    @test propdefault(description) == FieldProperties.not_property
-    @test proptype(description) <: String
+@defprop Property3{:prop3}::Int begin
+    @getproperty x = 1
 end
 
+@defprop Property4{:prop4} begin 
+    @getproperty x = 1
+end
+
+@testset "Property names" begin
+    @test propname(prop1) == :prop1
+    @test propname(prop2) == :prop2
+    @test propname(prop3) == :prop3
+    @test propname(prop4) == :prop4
+    #@test propname(description) == :description
+end
+
+@testset "Property getproperty" begin
+
+    @test prop3(3) == 1
+
+    @test prop4(2) == 1
+
+    (p::Property4{getproperty})(::AbstractString) = "1"
+    FieldProperties.proptype(::Type{<:Property4}, ::AbstractString) = String
+    @test prop4(2) == 1
+    @test prop4("foo") == "1"
+    #@test proptype(description) <: String
+end
+
+#=
 @testset "get_[setter/getter]" begin
     @testset "No default type, No default value" begin
         @test FieldProperties.get_setter(prop1) == prop1!
@@ -63,6 +65,7 @@ end
         @test FieldProperties.get_getter(prop4!) == prop4
     end
 end
+=#
 
 @testset "proptype" begin
     @testset "No default type, No default value" begin
@@ -126,26 +129,21 @@ prop4!(::Nothing, val) = nothing
     @test str == "prop4! (generic function with $(length(methods(prop4!))) methods)"
 end
 
-@test FieldProperties.optional_properties(Int) == ()
-
 
 struct TestStruct
     p1
     p2
     p3
     p4
-    p5
 end
 
-@assignprops(
-    TestStruct,
-    :p1 => prop1,
-    :p2 => prop2,
-    :p3 => prop3,
-    :p4 => prop4,
-    :p5 => public
-)
+@properties TestStruct begin
+    prop1 => :p1
+    prop2 => :p2
+    prop3 => :p3
+    prop4 => :p4
+end
 
 t = TestStruct(1,2,3,4,5)
 
-@test propertynames(t) == (:p5, :prop1,:prop2,:prop3,:prop4)
+@test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)

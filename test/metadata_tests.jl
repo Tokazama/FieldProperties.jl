@@ -2,9 +2,9 @@
     m = Metadata(; a = 1, b= 2)
 
     @test iterate(m) == (Pair{Symbol,Any}(:a, 1), 2)
-    @test iterate(m, 2)== (Pair{Symbol,Any}(:b, 2), 3)
-    @test propertynames(m) == keys(m) == (:a, :b)
-    @test getkey(m, :a, 1) == getkey(dictextension(m), :a, 1)
+    @test iterate(m, 2) == (Pair{Symbol,Any}(:b, 2), 3)
+    @test propertynames(m) == Tuple(keys(m)) == (:a, :b)
+    @test getkey(m, :a, 1) == getkey(FieldProperties.dictextension(m), :a, 1)
 
     @test getindex(m, :a) == 1
 

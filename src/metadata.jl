@@ -1,5 +1,7 @@
 """
-    AbstractMetadata
+    AbstractMetadata{M <: AbstractDict{Symbol,Any}} <: AbstractDict{Symbol,Any}
+
+Abstract type for storing metadata.
 """
 abstract type AbstractMetadata{D<:AbstractDict{Symbol,Any}} <: AbstractDict{Symbol,Any} end
 
@@ -26,13 +28,13 @@ Base.delete!(m::AbstractMetadata, k) = delete!(dictextension(m), k)
     return setindex!(dictextension(x), val, s)
 end
 
-function Base.length(m::AbstractMetadata)
-    return length(public_fields(m)) + length(assigned_fields(m)) + length(dictextension(m))
-end
+Base.length(m::AbstractMetadata) = length(dictextension(m))
 
 Base.getkey(m::AbstractMetadata, k, default) = getkey(dictextension(m), k, default)
 
-Base.keys(m::AbstractMetadata) = propertynames(m)
+Base.keys(m::AbstractMetadata) = keys(dictextension(m))
+
+Base.propertynames(m::AbstractMetadata) = Tuple(keys(m))
 
 suppress(m::AbstractMetadata) = get(m, :suppress, ())
 
@@ -50,7 +52,9 @@ function showdictlines(io::IO, m, suppress)
     end
 end
 
-Base.iterate(m::AbstractMetadata, state=1) = _iterate_properties(m, state)
+Base.iterate(m::AbstractMetadata) = iterate(dictextension(m))
+
+Base.iterate(m::AbstractMetadata, state) = iterate(dictextension(m), state)
 
 """
     NoopMetadata
@@ -92,9 +96,61 @@ end
 function Metadata(; kwargs...)
     out = Metadata(Dict{Symbol,Any}())
     for (k,v) in kwargs
-        out[k] = v
+        setproperty!(out, k, v)
     end
     return out
 end
 
-@assignprops(Metadata, :dictextension => dictextension)
+dictextension(m::Metadata) = getfield(m, :dictextension)
+
+Base.getproperty(m::Metadata, s::Symbol) = getindex(dictextension(m), s)
+
+Base.setproperty!(m::Metadata, s::Symbol, val) = setindex!(dictextension(m), val, s)
+#=
+
+## Examples
+
+```jldoctest
+julia> using FieldProperties
+
+julia> m = Metadata(; a = 1, b= 2)
+Metadata{Dict{Symbol,Any}} with 2 entries
+    a: 1
+    b: 2
+
+julia> propertynames(m)
+(:a, :b)
+
+julia> m[:a]
+1
+
+julia> m.a
+1
+
+julia> get(m, :a, 3) == get!(m, :a, 3) == 1
+true
+
+julia> get!(m, :c, 3)
+3
+
+julia> m.c
+3
+
+julia> m.d = 3
+3
+
+julia> m.d
+3
+
+julia> isempty(m)
+false
+
+julia> empty!(m)
+Dict{Symbol,Any} with 0 entries
+
+julia> isempty(m)
+true
+
+```
+
+=#

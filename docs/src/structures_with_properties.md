@@ -11,10 +11,12 @@ julia> mutable struct MyProperties{M} <: AbstractMetadata{M}
 
 Binding `Description` and `DictExtension` to specific fields is accomplished through `@assignprops`. Several other methods specific to `MyProperties` are created to provide property like behavior. Most notably, the methods from base overwritten are `getproperty`, `setproperty!`, and `propertynames`.
 ```julia
-julia> @assignprops(
-           MyProperties,
-           :my_description => description,
-           :my_properties => dictextension)
+julia> @properties MyProperties begin
+           description(x) => :my_description
+           description!(x, val) => :my_description
+           Any(x) => :my_properties
+           Any!(x, val) => (:my_properties)
+       end
 
 julia> m = MyProperties("", Dict{Symbol,Any}())
 MyProperties{Dict{Symbol,Any}} with 1 entry
