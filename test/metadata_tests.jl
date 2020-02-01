@@ -59,3 +59,6 @@ m.suppress = (:foo,)
     str = String(take!(io))
     @test str == x
 end
+
+description!(m, "foo")
+@test description(m) == "foo"

@@ -15,3 +15,6 @@ makedocs(;
     authors="Zachary P. Christensen",
 )
 
+deploydocs(
+    repo = "github.com/Tokazama/FieldProperties.jl.git",
+)

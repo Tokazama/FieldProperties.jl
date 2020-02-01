@@ -96,8 +96,6 @@ get_property(e::Symbol) = e
 function get_property(e::Expr)
     if is_call(e)
         return get_property(first(e.args))
-    elseif is_dotexpr(e)
-        return get_property(last(e.args))
     end  # TODO nice error for not call
 end
 get_property(e::QuoteNode) = e.value
@@ -122,28 +120,9 @@ function get_val(e::Expr)
     end  # TODO nice error for not call
 end
 
-function is_dotexpr(e::Expr)
-    if is_call(e)
-        return is_dotexpr(e.args[1])
-    else
-        return e.head === :.
-    end
-end
-
 dotexpr(root::Symbol, property::Symbol) = dotexpr(root, QuoteNode(property))
 dotexpr(root::Symbol, property::QuoteNode) = esc(Expr(:., root, property))
 
-function dotparse(e::Expr)
-    if is_call(e)
-        return dotparse(e.args[1])
-    elseif is_dotexpr(e)
-        return _dotparse(e.args[1], e.args[2])
-    end
-end
-_dotparse(lhs, rhs::Symbol) = lhs, rhs
-_dotparse(lhs, rhs::QuoteNode) = lhs, rhs.value
-
-var(x::Symbol) = esc(x)
 var(x::Symbol, vartype) = var(esc(x), vartype)
 var(x::Expr, vartype) = _var(x, vartype)
 _var(x, vartype::Symbol) = _var(x, esc(vartype))
