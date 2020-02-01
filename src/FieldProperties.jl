@@ -23,7 +23,21 @@ export
     propdoc,
     propdoclist,
     propname,
-    proptype
+    proptype,
+    # general properties
+    description,
+    description!,
+    status,
+    status!,
+    modality,
+    modality!,
+    label,
+    label!,
+    calmax,
+    calmax!,
+    calmin,
+    calmin!
+
 
 include("abstractproperty.jl")
 include("macro_utilities.jl")
