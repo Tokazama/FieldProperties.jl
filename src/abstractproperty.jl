@@ -11,17 +11,12 @@ abstract type AbstractProperty{name,T} <: Function end
 "NotProperty - Indicates the absence of a property."
 struct NotProperty <: AbstractProperty{:not_property,nothing} end
 const not_property = NotProperty()
-(::NotProperty)(x, s) = error("type $(typeof(x).name) does not have property $s")
-
-
-is_not_property(x) = x === not_property
 
 Base.show(io::IO, p::AbstractProperty) = _show_property(io, p)
 Base.show(io::IO, ::MIME"text/plain", p::AbstractProperty) = _show_property(io, p)
 
 _fxnname(p::AbstractProperty{name,setproperty!}) where {name} = Symbol(name, :!)
 _fxnname(p::AbstractProperty{name,getproperty}) where {name} = name
-_fxnname(p::AbstractProperty{name,nothing}) where {name} = name
 _fxnname(p::AbstractProperty{name,fxn}) where {name,fxn} = "$name($fxn)"
 
 function _show_property(io, p::AbstractProperty)
@@ -56,7 +51,7 @@ This is functionlly equivalent to `convert(proptype(p, x), v)`.
 """
 propconvert(p, x, v) = _propconvert(proptype(p, x), v)
 _propconvert(::Type{T}, v::V) where {T,V<:T} = v
-_propconvert(::Type{T}, v::V) where {T,V} = convert(T, v)
+_propconvert(::Type{T}, v::V) where {T,V} = T(v)
 
 """
     proptype(p, context) -> Type

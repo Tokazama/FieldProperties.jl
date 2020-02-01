@@ -19,6 +19,9 @@ t = TestStruct(1,2,3,4)
 @test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)
 
 
+FieldProperties._fxnname(FieldProperties.Description{values}()) == "description(values)"
+
+
 x = rand(4,4)
 @test @inferred(calmin(x)) == minimum(x)
 @test @inferred(calmax(x)) == maximum(x)

@@ -62,3 +62,6 @@ end
 
 description!(m, "foo")
 @test description(m) == "foo"
+
+description!(m, rand(UInt8, 8))
+@test isa(description(m), String)
