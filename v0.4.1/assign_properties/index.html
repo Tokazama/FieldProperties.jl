@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Assigning Properties · FieldProperties.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">FieldProperties.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Introduction</a></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../creating_properties/">Creating Properties</a></li><li class="is-active"><a class="tocitem" href>Assigning Properties</a></li><li><a class="tocitem" href="../general_properties/">General Properties</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Assigning Properties</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Assigning Properties</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/Tokazama/FieldProperties.jl/blob/master/docs/src/assign_properties.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Assigning-Properties-1"><a class="docs-heading-anchor" href="#Assigning-Properties-1">Assigning Properties</a><a class="docs-heading-anchor-permalink" href="#Assigning-Properties-1" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-binding" id="FieldProperties.@properties" href="#FieldProperties.@properties"><code>FieldProperties.@properties</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia">@properties T block</code></pre><p>Syntactic sugar for custom <code>getproperty</code>, <code>setproperty!</code>, and <code>propertynames</code> methods. For any type <code>T</code> passed to <code>@properties</code> these methods will be rewritten from their default.</p><p><strong>Examples</strong></p><p>The following syntax assigns property names to function calls.</p><pre><code class="language-julia-repl">julia&gt; using FieldProperties
+
+julia&gt; mutable struct MyType
+           x::Int
+       end
+
+julia&gt; @properties MyType begin
+           xint(self) = getfield(self, :x)
+           xint!(self, val) = setfield!(self, :x, val)
+           hello(self) = &quot;hello&quot;
+       end
+
+julia&gt; mt = MyType(1)
+MyType(1)
+
+julia&gt; mt.xint
+1
+
+julia&gt; mt.xint = 2
+2
+
+julia&gt; mt.xint
+2
+
+julia&gt; mt.hello
+&quot;hello&quot;
+
+julia&gt; propertynames(mt)
+(:xint, :hello)
+
+julia&gt; mt.x
+ERROR: Property x not found
+[...]</code></pre><p>There are three things you should take away from this:</p><ol><li><code>getproperty</code>, <code>setproperty!</code>, and <code>propertynames</code> are completely overwritten here</li><li>Any property assignment that ends with <code>!</code> is used to assign a <code>setproperty!</code></li><li><code>MyType</code> not longer can access the <code>x</code> field via <code>mt.x</code> (because of the first point).</li></ol><p>It can be somewhat tedious to write out every <code>getfield</code> and <code>setfield</code> method, so let&#39;s redo this using <code>=&gt;</code> to assign fields</p><pre><code class="language-julia-repl">julia&gt; @properties MyType begin
+           xint(self) =&gt; :x
+           xint!(self, val) =&gt; :x
+           hello(self) = &quot;hello&quot;
+       end
+
+julia&gt; mt = MyType(1)
+MyType(1)
+
+julia&gt; mt.xint
+1
+
+julia&gt; mt.xint = 2
+2
+
+julia&gt; mt.xint
+2
+
+julia&gt; mt.hello
+&quot;hello&quot;
+
+julia&gt; propertynames(mt)
+(:xint, :hello)
+
+julia&gt; mt.x
+ERROR: Property x not found
+[...]</code></pre><p>Sometimes we want to use a modular approach to constructing a type. The following example requires users to know where to find the <code>x1</code>, <code>x2</code>, and <code>x3</code> fields.</p><pre><code class="language-julia-repl">julia&gt; mutable struct PropList1
+           x2::Int
+       end
+
+julia&gt; mutable struct PropList2
+           x3::Int
+       end
+
+julia&gt; mutable struct MyProperties
+           x1::Int
+           l1::PropList1
+           l2::PropList2
+       end
+
+julia&gt; mp = MyProperties(1, PropList1(2), PropList2(3))
+MyProperties(1, PropList1(2), PropList2(3))
+
+julia&gt; mp.x1
+1
+
+julia&gt; mp.l1.x2  # obnoxious for users
+2
+
+julia&gt; mp.l2.x3  # also obnoxious for users
+3</code></pre><p>The following syntax tells our property methods to search through nested fields.</p><pre><code class="language-julia-repl">julia&gt; @properties MyProperties begin
+           x1(self) =&gt; :x1
+           x1!(self, val) =&gt; :x1
+           Any(self) =&gt; (:l1, :l2)
+           Any!(self, val) =&gt; (:l1, :l2)
+       end
+
+julia&gt; propertynames(mp)
+(:x1, :x2, :x3)
+
+julia&gt; mp.x1
+1
+
+julia&gt; mp.x2
+2
+
+julia&gt; mp.x3
+3</code></pre><p>The last two methods (<code>Any(x)</code> and <code>Any!(x, val)</code>) tell the <code>getproperty</code> and <code>setproperty!</code> methods search the <code>l1</code> and <code>l2</code> fields for any property that isn&#39;t <code>:x1</code>.</p><p>The lowered code is:</p><pre><code class="language-julia">julia&gt; @macroexpand @properties MyProperties begin
+                  x1(self) =&gt; :x1
+                  x1!(self, val) =&gt; :x1
+                  Any(self) =&gt; (:l1, :l2)
+                  Any!(self, val) =&gt; (:l1, :l2)
+              end
+quote
+    function Base.getproperty(self::MyProperties, p::Symbol)
+        if p === :x1
+            getfield(self, :x1)
+        else
+            if hasproperty(getfield(self, :l1), p)
+                getproperty(getfield(self, :l1), p)
+            else
+                getproperty(getfield(self, :l2), p)
+            end
+        end
+    end
+    function Base.setproperty!(self::MyProperties, p::Symbol, val)
+        if p === :x1
+            setfield!(self, :x1, val)
+        else
+            if hasproperty(getfield(self, :l1), p)
+                setproperty!(getfield(self, :l1), p, val)
+            else
+                setproperty!(getfield(self, :l2), p, val)
+            end
+        end
+    end
+    function Base.propertynames(self::MyProperties)
+        (:x1, propertynames(getfield(self, :l1))..., propertynames(getfield(self, :l2))...)
+    end
+end</code></pre><p>Note that the the <code>:l1</code> and <code>l2</code> fields are searched in the same order they are called inside the macro (e.g., <code>Any(x) =&gt; (:l1, :l2)</code> results in searching <code>:l1</code> then <code>:l2</code>).</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/Tokazama/FieldProperties.jl/blob/fdbcbfec6ed3d78aad0005d91c1d24d14484302d/src/properties.jl#LL1-L172">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../creating_properties/">« Creating Properties</a><a class="docs-footer-nextpage" href="../general_properties/">General Properties »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 2 February 2020 04:38">Sunday 2 February 2020</span>. Using Julia version 1.3.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
