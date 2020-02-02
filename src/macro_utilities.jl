@@ -70,7 +70,7 @@ function check_args(newself, oldself, newval, oldval)
         if newself === oldself
             return newself, check_args(newval, oldval)
         else
-            error("Argument to referring to self is inconsistent, got $newself and $oldself.")
+            error("Argument referring to self is inconsistent, got $newself and $oldself.")
         end
     end
 end
@@ -85,7 +85,7 @@ function check_args(newval, oldval)
             if oldval === newval
                 return newval
             else
-                error("Argument to referring to value is inconsistent, got $newval and $oldval.")
+                error("Argument referring to value is inconsistent, got $newval and $oldval.")
             end
         end
     end
@@ -98,7 +98,6 @@ function get_property(e::Expr)
         return get_property(first(e.args))
     end  # TODO nice error for not call
 end
-get_property(e::QuoteNode) = e.value
 
 # extract the self referencing argument
 function get_self(e::Expr)
