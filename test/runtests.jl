@@ -5,6 +5,7 @@ struct TestStruct
     p2
     p3
     p4
+    p5
 end
 
 @properties TestStruct begin
@@ -12,9 +13,11 @@ end
     prop2(self) => :p2
     prop3(self) => :p3
     prop4(self) => :p4
+    Any(self) => :p5
+    Any!(self, val) => :p5
 end
 
-t = TestStruct(1,2,3,4)
+t = TestStruct(1,2,3,4,5)
 
 @test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)
 

@@ -7,7 +7,8 @@ makedocs(;
         "Introduction" => "index.md",
         "Manual" => Any[
             "creating_properties.md",
-            "assign_properties.md"
+            "assign_properties.md",
+            "general_properties.md",
         ],
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",

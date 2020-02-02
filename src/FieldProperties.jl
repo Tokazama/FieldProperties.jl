@@ -20,6 +20,7 @@ export
     # Macros
     @defprop,
     @properties,
+    propconvert,
     propdoc,
     propdoclist,
     propname,
