@@ -13,6 +13,9 @@
     @test get!(m, :a, 3) == 1
 
     @test m.a == 1
+    m[:a] = 2
+    @test m.a == 2
+
     @test m.b == 2
     m.b = 3
     @test m.b == 3

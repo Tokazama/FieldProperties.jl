@@ -21,13 +21,24 @@ t = TestStruct(1,2,3,4,5)
 
 @test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)
 
-
 FieldProperties._fxnname(FieldProperties.Description{values}()) == "description(values)"
-
 
 x = rand(4,4)
 @test @inferred(calmin(x)) == minimum(x)
 @test @inferred(calmax(x)) == maximum(x)
+
+struct ArrayLike{T,N}
+    a::Array{T,N}
+    calmax::T
+    calmin::T
+end
+
+xdiff = -(extrema(x)...)
+xmax = maximum(x) - .25 * xdiff
+xmin = minimum(x) + .25 * xdiff
+a = ArrayLike(x, xmax, xmin)
+@test calmax(a) == xmax
+@test calmin(a) == xmin
 
 include("metadata_tests.jl")
 

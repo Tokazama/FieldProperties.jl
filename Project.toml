@@ -1,7 +1,7 @@
 name = "FieldProperties"
 uuid = "127e4479-4c95-493a-afaa-609d38175b70"
 authors = ["zchristensen "]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"

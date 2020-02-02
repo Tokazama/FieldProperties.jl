@@ -25,13 +25,13 @@ Property providing name for parent structure.
 Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.
 """
 @defprop CalibrationMaximum{:calmax}::(x::AbstractArray->eltype(x)) begin
-    @getproperty x -> maximum(x)
+    @getproperty x::AbstractArray -> maximum(x)
 end
 
 """
 Specifies minimum element for display purposes. If not specified returns the minimum value in the collection.
 """
 @defprop CalibrationMinimum{:calmin}::(x::AbstractArray->eltype(x)) begin
-    @getproperty x -> minimum(x)
+    @getproperty x::AbstractArray -> minimum(x)
 end
 
