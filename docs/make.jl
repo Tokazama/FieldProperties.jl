@@ -10,7 +10,7 @@ makedocs(;
             "assign_properties.md",
             "metadata.md",
             "general_properties.md",
-            "property_documentation",
+            "property_documentation.md",
         ],
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",
