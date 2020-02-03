@@ -41,6 +41,7 @@ export
 
 
 include("abstractproperty.jl")
+include("propdoc.jl")
 include("macro_utilities.jl")
 include("defprop.jl")
 include("properties.jl")

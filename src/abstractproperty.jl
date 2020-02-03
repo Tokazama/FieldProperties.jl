@@ -8,7 +8,7 @@ See [`@defprop`](@ref), [`@properties`](@ref)
 """
 abstract type AbstractProperty{name,T} <: Function end
 
-"NotProperty - Indicates the absence of a property."
+#NotProperty - Indicates the absence of a property.
 struct NotProperty <: AbstractProperty{:not_property,nothing} end
 const not_property = NotProperty()
 

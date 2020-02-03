@@ -40,6 +40,10 @@ a = ArrayLike(x, xmax, xmin)
 @test calmax(a) == xmax
 @test calmin(a) == xmin
 
+@testset "property documentation" begin
+    @test propdoclist(description, calmax) == "* description: Description that may say whatever you like.\n* calmax: Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.\n"
+end
+
 include("metadata_tests.jl")
 
 @testset "FieldProperties docs" begin
