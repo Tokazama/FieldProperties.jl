@@ -1,6 +1,6 @@
 # Metadata
 
-TODO further document how to use metadata
+This section covers some basic types that are useful in constructing metadata for storing properties.
 
 ```@docs
 AbstractMetadata

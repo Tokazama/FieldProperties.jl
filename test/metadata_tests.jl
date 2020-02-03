@@ -6,6 +6,7 @@
     @test propertynames(m) == Tuple(keys(m)) == (:a, :b)
     @test getkey(m, :a, 1) == getkey(FieldProperties.dictextension(m), :a, 1)
 
+    #= TODO delete these once we know that they are still covered by docs
     @test getindex(m, :a) == 1
 
     @test get(m, :a, 3) == 1
@@ -19,6 +20,7 @@
     @test m.b == 2
     m.b = 3
     @test m.b == 3
+    =#
     @test length(m) == 2
     delete!(m, :a)
     @test !haskey(m, :a)
