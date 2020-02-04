@@ -64,7 +64,7 @@ julia> using FieldProperties
 
 julia> @defprop Property1{:prop1}
 
-julia> propname(prop1)
+julia> name(prop1)
 :prop1
 
 julia> proptype(prop1)
@@ -81,7 +81,7 @@ Define the propertie's type
 ```jldoctest defprop
 julia> @defprop Property2{:prop2}::Int
 
-julia> propname(prop2)
+julia> name(prop2)
 :prop2
 
 julia> proptype(prop2)
@@ -94,7 +94,7 @@ julia> @defprop Property3{:prop3}::Int begin
            @getproperty x -> 1
        end
 
-julia> propname(prop3)
+julia> name(prop3)
 :prop3
 
 julia> proptype(prop3)
@@ -111,7 +111,7 @@ julia> @defprop Property4{:prop4} begin
            @getproperty x::String -> "1"
        end
 
-julia> propname(prop4)
+julia> name(prop4)
 :prop4
 
 julia> proptype(prop4)

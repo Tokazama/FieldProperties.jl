@@ -30,26 +30,6 @@ x = rand(4,4)
 @test proptype(calmin, x) <: Float64
 @test proptype(calmax, x) <: Float64
 
-struct ArrayLike{T,N}
-    a::Array{T,N}
-    calmax::T
-    calmin::T
-end
-
-xdiff = -(extrema(x)...)
-xmax = maximum(x) - .25 * xdiff
-xmin = minimum(x) + .25 * xdiff
-a = ArrayLike(x, xmax, xmin)
-@test calmax(a) == xmax
-@test calmin(a) == xmin
-
-
-@testset "property documentation" begin
-    @test propdoclist(description, calmax) == "* `description`: Description that may say whatever you like.\n* `calmax`: Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.\n"
-end
-
-
-
 include("metadata_tests.jl")
 
 @testset "FieldProperties docs" begin

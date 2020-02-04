@@ -21,17 +21,17 @@ export
     @defprop,
     @properties,
     propconvert,
-    propdoc,
-    propdoclist,
-    propname,
     proptype,
     # general properties
     description,
     description!,
+    description_list,
     status,
     status!,
     modality,
     modality!,
+    name,
+    name!,
     label,
     label!,
     calmax,
@@ -41,9 +41,10 @@ export
 
 
 include("abstractproperty.jl")
-include("propdoc.jl")
 include("macro_utilities.jl")
 include("defprop.jl")
+
+include("documentation.jl")
 include("properties.jl")
 include("general.jl")
 include("metadata.jl")

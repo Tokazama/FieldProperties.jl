@@ -62,13 +62,3 @@ unique type restrictions given different types for `context`.
 proptype(p) = proptype(p, not_property)
 proptype(::P, x) where {P} = proptype(P, x)
 proptype(::Type{P}, x) where {P<:AbstractProperty} = Any
-
-
-"""
-    propname(x) -> Symbol
-
-Returns the symbolic name of a property.
-"""
-propname(::T) where {T} = propname(T)
-propname(::Type{<:AbstractProperty{name}}) where {name} = name
-
