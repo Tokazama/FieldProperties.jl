@@ -9,17 +9,6 @@ Property providing label for parent structure.
 @defprop Label{:label}::Symbol
 
 """
-    name(x) -> Symbol
-    name!(x, val)
-
-Property providing name for parent structure.
-"""
-@defprop Name{:name}::Symbol
-
-name(::P) where {P<:AbstractProperty} = name(P)
-name(::Type{<:AbstractProperty{n}}) where {n} = n
-
-"""
     calmax(x)
     calmax!(x, val)
 

@@ -5,9 +5,13 @@ function _defprop(t, name::Symbol, struct_name::Expr, blk)
     setter_fxn = esc(Symbol(name, :!))
     T = esc(:T)
 
-    out = Expr(:block)
-    push!(out.args, :(const $getter_fxn = $struct_name{$(esc(:getproperty))}()))
-    push!(out.args, :(const $setter_fxn = $struct_name{$(esc(:setproperty!))}()))
+    out = quote
+        @doc @doc($struct_name) ->
+        const $getter_fxn = $struct_name{$(esc(:getproperty))}()
+
+        @doc @doc($struct_name) ->
+        const $setter_fxn = $struct_name{$(esc(:setproperty!))}()
+    end
     #_add_propdefault!(blk, d, struct_name)
     _add_proptype!(out, t, struct_name)
 

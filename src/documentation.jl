@@ -1,4 +1,21 @@
 """
+    name(x) -> Symbol
+    name!(x, val)
+
+Property providing name for parent structure.
+"""
+@defprop Name{:name}::Symbol
+
+"""
+    name(x::AbstractProperty) -> Symbol
+
+Returns the symbolic name of the property.
+"""
+name(::P) where {P<:AbstractProperty} = name(P)
+name(::Type{<:AbstractProperty{n}}) where {n} = n
+
+
+"""
     description(x) -> String
 
 Description that may say whatever you like.
