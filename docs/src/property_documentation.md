@@ -2,6 +2,6 @@
 
 ```@docs
 FieldProperties.name
-FieldProperties.description
+description
 FieldProperties.description_list
 ```

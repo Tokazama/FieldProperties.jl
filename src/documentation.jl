@@ -19,14 +19,12 @@ name(::Type{<:AbstractProperty{n}}) where {n} = n
     description(x) -> String
 
 Description that may say whatever you like.
-"""
-@defprop Description{:description}::String
 
-"""
-    description(p::AbstractProperty) -> String
+---
+
+    description(x::AbstractProperty) -> String
 
 Returns description for property `x`.
-
 ## Examples
 ```jldoctest
 julia> using FieldProperties
@@ -35,7 +33,9 @@ julia> description(description)
 "Description that may say whatever you like.\\n"
 ```
 """
-description(::T) where {T<:AbstractProperty} = _extract_doc(Base.Docs.doc(T))
+@defprop Description{:description}::String
+
+description(x::T) where {T<:AbstractProperty} = _extract_doc(Base.Docs.doc(T))
 function _extract_description(x::AbstractArray)
     for x_i in x
         out = _extract_description(x_i)
