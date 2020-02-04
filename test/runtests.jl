@@ -45,7 +45,7 @@ a = ArrayLike(x, xmax, xmin)
 
 
 @testset "property documentation" begin
-    @test propdoclist(description, calmax) == "* description: Description that may say whatever you like.\n* calmax: Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.\n"
+    @test propdoclist(description, calmax) == "* `description`: Description that may say whatever you like.\n* `calmax`: Specifies maximum element for display purposes. If not specified returns the maximum value in the collection.\n"
 end
 
 

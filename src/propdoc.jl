@@ -19,7 +19,7 @@ Returns a markdown list of properties given multiple properties `ps`.
 function propdoclist(ps...)
     out = ""
     for p_i in ps
-        out = out * "* $(propname(p_i)): $(propdoc(p_i))\n"
+        out = out * "* `$(propname(p_i))`: $(propdoc(p_i))\n"
     end
     return out
 end
