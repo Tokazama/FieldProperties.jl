@@ -51,7 +51,7 @@ This is functionlly equivalent to `convert(proptype(p, x), v)`.
 """
 propconvert(p, x, v) = _propconvert(proptype(p, x), v)
 _propconvert(::Type{T}, v::V) where {T,V<:T} = v
-_propconvert(::Type{T}, v::V) where {T,V} = T(v)
+_propconvert(::Type{T}, v::V) where {T,V} = T(v)::T
 
 """
     proptype(p, context) -> Type
