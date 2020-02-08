@@ -201,12 +201,19 @@ macro properties(T, lines)
                     push!(property_names, QuoteNode(prop_symbol))
                 end
             elseif op === :(=>)
-                if prop_symbol === :Any
+                if prop_symbol == :Any
                     if body isa QuoteNode
                         if is_setter
                             nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), body), esc(:p), esc(val))
                         else
                             nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), body), esc(:p))
+                        end
+                        !in(body, nested_names) && push!(nested_names, body)
+                    elseif body isa Symbol
+                        if is_setter
+                            nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), QuoteNode(body)), esc(:p), esc(val))
+                        else
+                            nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), QuoteNode(body)), esc(:p))
                         end
                         !in(body, nested_names) && push!(nested_names, body)
                     elseif body isa Expr && body.head == :tuple
@@ -257,7 +264,11 @@ macro properties(T, lines)
         end
     end
 
-    if !isempty(getter_blk.args)
+    if isempty(getter_blk.args)
+        if !isempty(nested_getter_blk.args)
+            push!(blk.args, Expr(:function, callexpr(dotexpr(:Base, :getproperty), var(self, T), var(:p, :Symbol)), nested_getter_blk))
+        end
+    else
         if isempty(nested_getter_blk.args)
             final_out!(getter_blk, callexpr(esc(:error), "Property ", esc(:p), " not found"))
         else
@@ -266,7 +277,11 @@ macro properties(T, lines)
         push!(blk.args, Expr(:function, callexpr(dotexpr(:Base, :getproperty), var(self, T), var(:p, :Symbol)), getter_blk))
     end
 
-    if !isempty(setter_blk.args)
+    if isempty(setter_blk.args)
+        if !isempty(nested_setter_blk.args)
+            push!(blk.args, Expr(:function, callexpr(dotexpr(:Base, :setproperty!), var(self, T), var(:p, :Symbol), esc(val)), nested_setter_blk))
+        end
+    else
         if isempty(nested_setter_blk.args)
             final_out!(setter_blk, callexpr(esc(:error), "Property ", esc(:p), " not found"))
         else

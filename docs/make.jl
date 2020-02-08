@@ -12,6 +12,10 @@ makedocs(;
             "general_properties.md",
             "property_documentation.md",
         ],
+        "Examples" => Any[
+            "The `onset` Property" => "onset.md",
+            "Finding Jeff" => "finding_jeff.md",
+        ]
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",
     sitename="FieldProperties.jl",

@@ -3,6 +3,7 @@ function _defprop(t, name::Symbol, struct_name::Expr, blk)
     sym_name = QuoteNode(name)
     getter_fxn = esc(name)
     setter_fxn = esc(Symbol(name, :!))
+    eltyper_fxn = esc(Symbol(name, :_type))
     T = esc(:T)
 
     out = quote
@@ -11,9 +12,19 @@ function _defprop(t, name::Symbol, struct_name::Expr, blk)
 
         @doc @doc($struct_name) ->
         const $setter_fxn = $struct_name{$(esc(:setproperty!))}()
+
+        const $eltyper_fxn = $struct_name{$(esc(:eltype))}()
+
+        (::$struct_name)($(esc(:f))::$(esc(:Function))) = $struct_name{$(esc(:f))}()
     end
-    #_add_propdefault!(blk, d, struct_name)
-    _add_proptype!(out, t, struct_name)
+
+    if !isnothing(t)
+        if t isa Tuple
+            push!(out.args, fxnexpr(callexpr(Expr(:(::), Expr(:curly, dotexpr(:FieldProperties, :AbstractProperty), sym_name, esc(:eltype))), esc(t[1])), esc(t[2])))
+        else
+            push!(out.args, fxnexpr(callexpr(Expr(:(::), Expr(:curly, dotexpr(:FieldProperties, :AbstractProperty), sym_name, esc(:eltype))), esc(:x)), esc(t)))
+        end
+    end
 
     for line_i in blk.args
         if is_macro_expr(line_i)
@@ -46,16 +57,6 @@ function _defprop(x, blk)
     end
 end
 
-_add_proptype!(blk::Expr, ::Nothing, const_type) = nothing
-function _add_proptype!(blk::Expr, expr, const_type)
-    if expr isa Tuple
-        push!(blk.args, fxnexpr(callexpr(dotexpr(:FieldProperties, :proptype), _type(const_type), esc(expr[1])), esc(expr[2])))
-    else
-        push!(blk.args, fxnexpr(callexpr(dotexpr(:FieldProperties, :proptype), _type(const_type), esc(:x)), esc(expr)))
-    end
-end
-
-
 """
     @defprop Property{name}::Type block
 
@@ -71,14 +72,8 @@ julia> @defprop Property1{:prop1}
 julia> name(prop1)
 :prop1
 
-julia> proptype(prop1)
+julia> prop1_type(:any_type)
 Any
-
-julia> prop1
-prop1 (generic function with 1 method)
-
-julia> prop1!
-prop1! (generic function with 1 method)
 ```
 
 Define the propertie's type
@@ -88,7 +83,7 @@ julia> @defprop Property2{:prop2}::Int
 julia> name(prop2)
 :prop2
 
-julia> proptype(prop2)
+julia> prop2_type(:any_type)
 Int64
 ```
 
@@ -101,7 +96,7 @@ julia> @defprop Property3{:prop3}::Int begin
 julia> name(prop3)
 :prop3
 
-julia> proptype(prop3)
+julia> prop3_type(:any_type)
 Int64
 
 julia> prop3(3)
@@ -118,17 +113,11 @@ julia> @defprop Property4{:prop4} begin
 julia> name(prop4)
 :prop4
 
-julia> proptype(prop4)
+julia> prop4_type(:any_type)
 Any
 
 julia> prop4(1)
 1
-
-julia> prop4
-prop4 (generic function with 3 methods)
-
-julia> prop4!
-prop4! (generic function with 1 method)
 ```
 """
 macro defprop(expr, blk)
@@ -150,11 +139,3 @@ macro defprop(expr)
     end
 end
 
-#=
-x = :(@defprop Property3{:prop3}::Int begin
-    @getproperty x = 1
-end)
-@defprop Property3{:prop3}::Int begin
-    @getproperty x = 1
-end
-=#

@@ -1,3 +1,4 @@
+
 """
     AbstractProperty{name}
 
@@ -40,6 +41,8 @@ function (p::AbstractProperty{name,setproperty!})(x, val) where {name}
     return setproperty!(x, name, propconvert(p, x, val))
 end
 
+(p::AbstractProperty{name,eltype})(x) where {name} = Any
+
 """
     propconvert(p, context, v)
 
@@ -49,16 +52,10 @@ If `v` isn't the appropriate type then `propconvert` attempts to convert to the
 
 This is functionlly equivalent to `convert(proptype(p, x), v)`.
 """
-propconvert(p, x, v) = _propconvert(proptype(p, x), v)
+@inline propconvert(p, x, v) = _propconvert(p(eltype)(x), v)
 _propconvert(::Type{T}, v::V) where {T,V<:T} = v
 _propconvert(::Type{T}, v::V) where {T,V} = T(v)::T
 
-"""
-    proptype(p, context) -> Type
+@deprecate(proptype(p), p(eltype)(not_property))
+@deprecate(proptype(p, x), p(eltype)(x))
 
-Return the appropriate type for property `p` given `context`. This method allows
-unique type restrictions given different types for `context`.
-"""
-proptype(p) = proptype(p, not_property)
-proptype(::P, x) where {P} = proptype(P, x)
-proptype(::Type{P}, x) where {P<:AbstractProperty} = Any

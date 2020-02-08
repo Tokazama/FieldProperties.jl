@@ -1,9 +1,9 @@
 # General Properties
 
 ```@docs
-FieldProperties.Label
+FieldProperties.label
 
-FieldProperties.CalibrationMaximum
+FieldProperties.calmax
 
-FieldProperties.CalibrationMinimum
+FieldProperties.calmin
 ```

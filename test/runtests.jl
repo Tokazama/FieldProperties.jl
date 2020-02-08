@@ -27,6 +27,12 @@ x = rand(4,4)
 @test @inferred(calmin(x)) == minimum(x)
 @test @inferred(calmax(x)) == maximum(x)
 
+T = FieldProperties.calmin_type(x)
+@test T <: Float64
+T = FieldProperties.calmax_type(x)
+@test T <: Float64
+
+# TODO delete 
 @test proptype(calmin, x) <: Float64
 @test proptype(calmax, x) <: Float64
 

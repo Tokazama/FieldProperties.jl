@@ -11,7 +11,6 @@ When a dot operator call `getproperty` or `setproperty!` it represent the proper
 
 ```@docs
 AbstractProperty
-proptype
 propconvert
 ```
 
