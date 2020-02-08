@@ -1,8 +1,6 @@
 # general properties that just need a home
 @defprop Status{:status}
 
-@defprop Modality{:modality}
-
 """
 Property providing label for parent structure.
 """

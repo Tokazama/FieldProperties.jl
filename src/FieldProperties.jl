@@ -21,15 +21,13 @@ export
     @defprop,
     @properties,
     propconvert,
-    proptype,
+    proptype,  # TODO remove after deprecation
     # general properties
     description,
     description!,
     description_list,
     status,
     status!,
-    modality,
-    modality!,
     name,
     name!,
     label,

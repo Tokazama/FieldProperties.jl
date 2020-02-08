@@ -1,5 +1,4 @@
 """
-
     @properties T block
 
 Syntactic sugar for custom `getproperty`, `setproperty!`, and `propertynames` methods.
@@ -207,13 +206,6 @@ macro properties(T, lines)
                             nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), body), esc(:p), esc(val))
                         else
                             nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), body), esc(:p))
-                        end
-                        !in(body, nested_names) && push!(nested_names, body)
-                    elseif body isa Symbol
-                        if is_setter
-                            nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), QuoteNode(body)), esc(:p), esc(val))
-                        else
-                            nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), QuoteNode(body)), esc(:p))
                         end
                         !in(body, nested_names) && push!(nested_names, body)
                     elseif body isa Expr && body.head == :tuple
