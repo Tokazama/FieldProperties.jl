@@ -1,5 +1,25 @@
 using FieldProperties, Test, Documenter
 
+@testset "Print multiple methods" begin
+    io = IOBuffer()
+    show(io, description)
+    str = String(take!(io))
+    @test str == "description (generic function with 3 methods)"
+
+    io = IOBuffer()
+    show(io, description!)
+    str = String(take!(io))
+    @test str == "description! (generic function with $(length(methods(description!))) methods)"
+end
+
+FieldProperties.not_property() = nothing
+@testset "Print single method" begin
+    io = IOBuffer()
+    show(io, FieldProperties.not_property)
+    str = String(take!(io))
+    @test str == "not_property(nothing) (generic function with 1 method)"
+end
+
 struct TestStruct
     p1
     p2

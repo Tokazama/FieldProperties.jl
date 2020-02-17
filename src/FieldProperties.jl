@@ -37,11 +37,9 @@ export
     calmin,
     calmin!
 
-
 include("abstractproperty.jl")
 include("macro_utilities.jl")
 include("defprop.jl")
-
 include("documentation.jl")
 include("properties.jl")
 include("general.jl")
