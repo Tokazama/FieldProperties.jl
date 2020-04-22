@@ -10,6 +10,7 @@ concrete type.
 module FieldProperties
 
 using Markdown
+using DocStringExtensions
 
 export
     # Types

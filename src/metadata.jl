@@ -1,3 +1,4 @@
+
 """
     AbstractMetadata{M <: AbstractDict{Symbol,Any}} <: AbstractDict{Symbol,Any}
 
@@ -156,4 +157,3 @@ dictextension(m::Metadata) = getfield(m, :dictextension)
 Base.getproperty(m::Metadata, s::Symbol) = getindex(dictextension(m), s)
 
 Base.setproperty!(m::Metadata, s::Symbol, val) = setindex!(dictextension(m), val, s)
-

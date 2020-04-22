@@ -82,3 +82,75 @@ function description_list(ps...)
     end
     return out
 end
+
+
+get_docstr(d::Markdown.MD) = get_docstr(d.meta[:results][1])
+get_docstr(d::Base.Docs.DocStr) = d
+
+###
+### Properties Abbreviation
+###
+
+function add_getproperty!(d::Markdown.MD, docstrs::Dict{Symbol,Any})
+    if isempty(d.meta[:results])
+        return nothing
+    else
+        add_getproperty!(d.meta[:results][1], docstrs)
+    end
+end
+
+function add_setproperty!(d::Markdown.MD, docstrs::Dict{Symbol,Any})
+    if isempty(d.meta[:results])
+        return nothing
+    else
+        add_setproperty!(d.meta[:results][1], docstrs)
+    end
+end
+
+function add_getproperty!(d::Base.Docs.DocStr, docstrs::Dict{Symbol,Any})
+    d.data[:getproperty] = docstrs
+    return nothing
+end
+
+function add_setproperty!(d::Base.Docs.DocStr, docstrs::Dict{Symbol,Any})
+    d.data[:setproperty!] = docstrs
+    return nothing
+end
+
+struct TypeGetProperty <: DocStringExtensions.Abbreviation end
+
+const GETPROPERTY = TypeGetProperty()
+
+function DocStringExtensions.format(abbrv::TypeGetProperty, buf, doc)
+    local docs = get(doc.data, :getproperty, Dict())
+    if !isempty(docs)
+        println(buf)
+        for (k,v) in docs
+            if v != nothing
+                println(buf, "  - `", k, "`: ", v)
+            end
+            println(buf)
+        end
+        println(buf)
+    end
+    return nothing
+end
+
+struct TypeSetProperty <: DocStringExtensions.Abbreviation end
+
+const SETPROPERTY = TypeSetProperty()
+
+function DocStringExtensions.format(abbrv::TypeSetProperty, buf, doc)
+    local docs = get(doc.data, :setproperty!, Dict())
+    if !isempty(docs)
+        println(buf)
+        for (k,v) in docs
+            if v != nothing
+                println(buf, "  - `", k, "`: ", v)
+            end
+            println(buf)
+        end
+        println(buf)
+    end
+    return nothing
+end

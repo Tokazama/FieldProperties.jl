@@ -20,8 +20,13 @@ FieldProperties.not_property() = nothing
     @test str == "not_property(nothing) (generic function with 1 method)"
 end
 
+"""
+    TestStruct
+"""
 struct TestStruct
+    "p1 doc"
     p1
+    "p2 doc"
     p2
     p3
     p4
