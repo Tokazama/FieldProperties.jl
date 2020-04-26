@@ -1,7 +1,10 @@
-using Documenter, FieldProperties
+
+using Documenter, FieldProperties, DocStringExtensions
+include("ExampleModule/src/ExampleModule.jl")
+import .ExampleModule
 
 makedocs(;
-    modules=[FieldProperties],
+    modules=[FieldProperties, ExampleModule],
     format=Documenter.HTML(),
     pages=[
         "Introduction" => "index.md",
@@ -9,13 +12,12 @@ makedocs(;
             "creating_properties.md",
             "assign_properties.md",
             "metadata.md",
-            "general_properties.md",
-            "property_documentation.md",
         ],
         "Examples" => Any[
             "The `onset` Property" => "onset.md",
             "Finding Jeff" => "finding_jeff.md",
-        ]
+            "Example Module" => "example_module.md",
+        ],
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",
     sitename="FieldProperties.jl",

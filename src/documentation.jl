@@ -1,3 +1,4 @@
+
 """
     name(x) -> Symbol
     name!(x, val)
@@ -83,10 +84,6 @@ function description_list(ps...)
     return out
 end
 
-
-get_docstr(d::Markdown.MD) = get_docstr(d.meta[:results][1])
-get_docstr(d::Base.Docs.DocStr) = d
-
 ###
 ### Properties Abbreviation
 ###
@@ -121,13 +118,17 @@ struct TypeGetProperty <: DocStringExtensions.Abbreviation end
 
 const GETPROPERTY = TypeGetProperty()
 
+function getprop_doc end
+
 function DocStringExtensions.format(abbrv::TypeGetProperty, buf, doc)
     local docs = get(doc.data, :getproperty, Dict())
+    local binding = doc.data[:binding]
+    local object = Docs.resolve(binding)
     if !isempty(docs)
         println(buf)
         for (k,v) in docs
             if v != nothing
-                println(buf, "  - `", k, "`: ", v)
+                println(buf, "  - ` $k `: $v")
             end
             println(buf)
         end
@@ -154,3 +155,4 @@ function DocStringExtensions.format(abbrv::TypeSetProperty, buf, doc)
     end
     return nothing
 end
+

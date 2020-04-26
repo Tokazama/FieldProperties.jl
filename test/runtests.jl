@@ -20,13 +20,8 @@ FieldProperties.not_property() = nothing
     @test str == "not_property(nothing) (generic function with 1 method)"
 end
 
-"""
-    TestStruct
-"""
 struct TestStruct
-    "p1 doc"
     p1
-    "p2 doc"
     p2
     p3
     p4
@@ -70,3 +65,11 @@ end
 @test_throws ErrorException("Argument referring to value is inconsistent, got x and y.") FieldProperties.check_args(:x, :y)
 
 @test_throws ErrorException("Argument referring to self is inconsistent, got w and z.") FieldProperties.check_args(:w, :z, :x, :y)
+
+#=
+doc = Docs.DocStr(Core.svec(), nothing, Dict())
+buf = IOBuffer()
+
+d = @doc(ExampleStruct).meta[:results][1]
+DocStringExtensions.format(GETPROPERTY, buf, 
+=#

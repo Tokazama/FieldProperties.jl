@@ -48,3 +48,20 @@ ERROR: field is not a property of SomeType
 julia> x.property == getproperty(x, :property) == getfield(x, :field)
 true
 ```
+
+## FieldProperties
+
+```@docs
+FieldProperties
+```
+
+## Index
+```@index
+Modules = [FieldProperties]
+```
+
+## Reference
+
+```@autodocs
+Modules = [FieldProperties]
+```

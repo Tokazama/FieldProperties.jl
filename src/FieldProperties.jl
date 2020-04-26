@@ -18,11 +18,12 @@ export
     Metadata,
     NoopMetadata,
     AbstractProperty,
+    GETPROPERTY,
+    SETPROPERTY,
     # Macros
     @defprop,
     @properties,
     propconvert,
-    proptype,  # TODO remove after deprecation
     # general properties
     description,
     description!,
