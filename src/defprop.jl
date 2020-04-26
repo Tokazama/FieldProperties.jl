@@ -41,7 +41,8 @@ function _defprop(x, t, blk)
     if x.head === :curly
         return _defprop(t, x.args[2], x.args[1], blk)
     else
-        error("properties must atleast have be of form PropertyType{:property_name}.")
+        # FIXME this errors before actually reaching this error message
+        error("properties must be of the form PropertyType{:property_name}.")
     end
 end
  

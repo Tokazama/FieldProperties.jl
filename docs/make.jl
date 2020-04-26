@@ -8,16 +8,13 @@ makedocs(;
     format=Documenter.HTML(),
     pages=[
         "Introduction" => "index.md",
-        "Manual" => Any[
-            "creating_properties.md",
-            "assign_properties.md",
-            "metadata.md",
-        ],
+        "Properties" => "properties.md",
         "Examples" => Any[
             "The `onset` Property" => "onset.md",
             "Finding Jeff" => "finding_jeff.md",
             "Example Module" => "example_module.md",
         ],
+        "Reference" => "reference.md"
     ],
     repo="https://github.com/Tokazama/FieldProperties.jl/blob/{commit}{path}#L{line}",
     sitename="FieldProperties.jl",

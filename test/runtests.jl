@@ -7,7 +7,7 @@ using FieldProperties, Test, Documenter
     @test str == "description (generic function with 3 methods)"
 
     io = IOBuffer()
-    show(io, description!)
+    show(io, MIME"text/plain"(), description!)
     str = String(take!(io))
     @test str == "description! (generic function with $(length(methods(description!))) methods)"
 end
