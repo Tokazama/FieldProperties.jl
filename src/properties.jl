@@ -303,9 +303,6 @@ macro properties(T, lines)
     end
     push!(blk.args, Expr(:function, callexpr(dotexpr(:Base, :propertynames), var(self, T)), Expr(:tuple, property_names...)))
 
-    push!(blk.args, esc(:(FieldProperties.add_getproperty!(@doc($T), $getter_docs))))
-    push!(blk.args, esc(:(FieldProperties.add_setproperty!(@doc($T), $setter_docs))))
-
     # add properties to DocStr
     quote
         $blk
@@ -314,6 +311,8 @@ macro properties(T, lines)
 
         if !isempty(d.meta[:results])
             docstr = first(d.meta[:results])
+            docstr.data[:getproperty] = $getter_docs
+            docstr.data[:setproperty!] = $setter_docs
             docstr.object = nothing
         end
     end

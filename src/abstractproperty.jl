@@ -48,14 +48,10 @@ end
 
 Ensures the value `v` is the appropriate type for property `p` given `context`.
 If `v` isn't the appropriate type then `propconvert` attempts to convert to the
-"correct type". The "correct type" is determined by `proptype(p, x)`.
+"correct type".
 
-This is functionlly equivalent to `convert(proptype(p, x), v)`.
 """
 @inline propconvert(p, x, v) = _propconvert(p(eltype)(x), v)
 _propconvert(::Type{T}, v::V) where {T,V<:T} = v
 _propconvert(::Type{T}, v::V) where {T,V} = T(v)::T
-
-@deprecate(proptype(p), p(eltype)(not_property))
-@deprecate(proptype(p, x), p(eltype)(x))
 

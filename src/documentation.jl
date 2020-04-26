@@ -84,41 +84,9 @@ function description_list(ps...)
     return out
 end
 
-###
-### Properties Abbreviation
-###
-
-function add_getproperty!(d::Markdown.MD, docstrs::Dict{Symbol,Any})
-    if isempty(d.meta[:results])
-        return nothing
-    else
-        add_getproperty!(d.meta[:results][1], docstrs)
-    end
-end
-
-function add_setproperty!(d::Markdown.MD, docstrs::Dict{Symbol,Any})
-    if isempty(d.meta[:results])
-        return nothing
-    else
-        add_setproperty!(d.meta[:results][1], docstrs)
-    end
-end
-
-function add_getproperty!(d::Base.Docs.DocStr, docstrs::Dict{Symbol,Any})
-    d.data[:getproperty] = docstrs
-    return nothing
-end
-
-function add_setproperty!(d::Base.Docs.DocStr, docstrs::Dict{Symbol,Any})
-    d.data[:setproperty!] = docstrs
-    return nothing
-end
-
 struct TypeGetProperty <: DocStringExtensions.Abbreviation end
 
 const GETPROPERTY = TypeGetProperty()
-
-function getprop_doc end
 
 function DocStringExtensions.format(abbrv::TypeGetProperty, buf, doc)
     local docs = get(doc.data, :getproperty, Dict())

@@ -52,14 +52,10 @@ T = FieldProperties.calmin_type(x)
 T = FieldProperties.calmax_type(x)
 @test T <: Float64
 
-# TODO delete 
-@test proptype(calmin, x) <: Float64
-@test proptype(calmax, x) <: Float64
-
 include("metadata_tests.jl")
 
 @testset "FieldProperties docs" begin
-    doctest(FieldProperties; manual=false)
+    doctest(FieldProperties)
 end
 
 @test_throws ErrorException("Argument referring to value is inconsistent, got x and y.") FieldProperties.check_args(:x, :y)
