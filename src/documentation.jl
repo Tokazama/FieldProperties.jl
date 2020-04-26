@@ -1,3 +1,4 @@
+
 """
     name(x) -> Symbol
     name!(x, val)
@@ -82,3 +83,44 @@ function description_list(ps...)
     end
     return out
 end
+
+struct TypeGetProperty <: DocStringExtensions.Abbreviation end
+
+const GETPROPERTY = TypeGetProperty()
+
+function DocStringExtensions.format(abbrv::TypeGetProperty, buf, doc)
+    local docs = get(doc.data, :getproperty, Dict())
+    local binding = doc.data[:binding]
+    local object = Docs.resolve(binding)
+    if !isempty(docs)
+        println(buf)
+        for (k,v) in docs
+            if v != nothing
+                println(buf, "  - ` $k `: $v")
+            end
+            println(buf)
+        end
+        println(buf)
+    end
+    return nothing
+end
+
+struct TypeSetProperty <: DocStringExtensions.Abbreviation end
+
+const SETPROPERTY = TypeSetProperty()
+
+function DocStringExtensions.format(abbrv::TypeSetProperty, buf, doc)
+    local docs = get(doc.data, :setproperty!, Dict())
+    if !isempty(docs)
+        println(buf)
+        for (k,v) in docs
+            if v != nothing
+                println(buf, "  - `", k, "`: ", v)
+            end
+            println(buf)
+        end
+        println(buf)
+    end
+    return nothing
+end
+

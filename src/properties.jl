@@ -1,3 +1,4 @@
+
 """
     @properties T block
 
@@ -181,10 +182,20 @@ macro properties(T, lines)
     getter_blk = Expr(:if)
     self = nothing
     val = nothing
+    docstr = nothing
+    setter_docs = Dict{Symbol,Any}()
+    getter_docs = Dict{Symbol,Any}()
     for line_i in lines.args
         if line_i isa LineNumberNode
             continue
-        else
+        else  # line_i isa Expr
+            if line_i.head === :macrocall
+                docstr = line_i.args[3]
+                line_i = last(line_i.args)
+            else
+                docstr = nothing
+            end
+
             head = fxnhead(line_i)
             body = fxnbody(line_i)
             op = fxnop(line_i)
@@ -193,8 +204,10 @@ macro properties(T, lines)
                 cnd = callexpr(:(===), esc(:p), QuoteNode(prop_symbol))
                 if is_setter
                     chain_ifelse!(setter_blk, cnd, esc(body))
+                    setter_docs[prop_symbol] = docstr
                 else
                     chain_ifelse!(getter_blk, cnd, esc(body))
+                    getter_docs[prop_symbol] = docstr
                 end
                 if !in(QuoteNode(prop_symbol), property_names)
                     push!(property_names, QuoteNode(prop_symbol))
@@ -224,6 +237,7 @@ macro properties(T, lines)
                                         callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), n_i), esc(:p), esc(val))
                                     )
                                 end
+                                setter_docs[prop_symbol] = docstr
                             else
                                 if i != n
                                     chain_ifelse!(
@@ -236,6 +250,7 @@ macro properties(T, lines)
                                         callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p))
                                     )
                                 end
+                                getter_docs[prop_symbol] = docstr
                             end
                             !in(n_i, nested_names) && push!(nested_names, n_i)
                         end
@@ -245,11 +260,13 @@ macro properties(T, lines)
                     body isa QuoteNode || error("shortand property assignments should take the form `property_name => :fieldname`, got $(typeof(body)) for field name.")
                     if is_setter
                         chain_ifelse!(setter_blk, cnd, callexpr(esc(:setfield!), esc(self), body, esc(val)))
+                        setter_docs[prop_symbol] = docstr
                     else
                         chain_ifelse!(getter_blk, cnd, callexpr(esc(:getfield), esc(self), body))
                     end
                     if !in(QuoteNode(prop_symbol), property_names)
                         push!(property_names, QuoteNode(prop_symbol))
+                        getter_docs[prop_symbol] = docstr
                     end
                 end
             end
@@ -287,6 +304,19 @@ macro properties(T, lines)
         push!(property_names, Expr(:..., callexpr(esc(:propertynames), callexpr(esc(:getfield), esc(self), nested_names_i))))
     end
     push!(blk.args, Expr(:function, callexpr(dotexpr(:Base, :propertynames), var(self, T)), Expr(:tuple, property_names...)))
-    return blk
+
+    # add properties to DocStr
+    quote
+        $blk
+
+        d = @doc($T)
+
+        if !isempty(d.meta[:results])
+            docstr = first(d.meta[:results])
+            docstr.data[:getproperty] = $getter_docs
+            docstr.data[:setproperty!] = $setter_docs
+            docstr.object = nothing
+        end
+    end
 end
 
