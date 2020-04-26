@@ -25,7 +25,6 @@ end
 
 """
 struct TestStruct
-    "x"
     p1
     p2
     p3
@@ -89,5 +88,4 @@ end
 @test_throws ErrorException("Argument referring to value is inconsistent, got x and y.") FieldProperties.check_args(:x, :y)
 
 @test_throws ErrorException("Argument referring to self is inconsistent, got w and z.") FieldProperties.check_args(:w, :z, :x, :y)
-
 
