@@ -191,82 +191,84 @@ macro properties(T, lines)
         else  # line_i isa Expr
             if line_i.head === :macrocall
                 docstr = line_i.args[3]
+                line_i = last(line_i.args)
             else
-                head = fxnhead(line_i)
-                body = fxnbody(line_i)
-                op = fxnop(line_i)
-                is_setter, self, val, prop_symbol = parse_head(head, self, val)
-                if (op === :->) | (op === :(=)) | (op === :function)
+                docstr = nothing
+            end
+
+            head = fxnhead(line_i)
+            body = fxnbody(line_i)
+            op = fxnop(line_i)
+            is_setter, self, val, prop_symbol = parse_head(head, self, val)
+            if (op === :->) | (op === :(=)) | (op === :function)
+                cnd = callexpr(:(===), esc(:p), QuoteNode(prop_symbol))
+                if is_setter
+                    chain_ifelse!(setter_blk, cnd, esc(body))
+                    setter_docs[prop_symbol] = docstr
+                else
+                    chain_ifelse!(getter_blk, cnd, esc(body))
+                    getter_docs[prop_symbol] = docstr
+                end
+                if !in(QuoteNode(prop_symbol), property_names)
+                    push!(property_names, QuoteNode(prop_symbol))
+                end
+            elseif op === :(=>)
+                if prop_symbol == :Any
+                    if body isa QuoteNode
+                        if is_setter
+                            nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), body), esc(:p), esc(val))
+                        else
+                            nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), body), esc(:p))
+                        end
+                        !in(body, nested_names) && push!(nested_names, body)
+                    elseif body isa Expr && body.head == :tuple
+                        body = body.args
+                        n = length(body)
+                        for (i,n_i) in enumerate(body)
+                            if is_setter
+                                if i != n
+                                    chain_ifelse!(
+                                        nested_setter_blk,
+                                        callexpr(esc(:hasproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p)),
+                                        callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), n_i), esc(:p), esc(val))
+                                    )
+                                else
+                                    final_out!(nested_setter_blk,
+                                        callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), n_i), esc(:p), esc(val))
+                                    )
+                                end
+                                setter_docs[prop_symbol] = docstr
+                            else
+                                if i != n
+                                    chain_ifelse!(
+                                        nested_getter_blk,
+                                        callexpr(esc(:hasproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p)),
+                                        callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p))
+                                    )
+                                else
+                                    final_out!(nested_getter_blk,
+                                        callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p))
+                                    )
+                                end
+                                getter_docs[prop_symbol] = docstr
+                            end
+                            !in(n_i, nested_names) && push!(nested_names, n_i)
+                        end
+                    end
+                else
                     cnd = callexpr(:(===), esc(:p), QuoteNode(prop_symbol))
+                    body isa QuoteNode || error("shortand property assignments should take the form `property_name => :fieldname`, got $(typeof(body)) for field name.")
                     if is_setter
-                        chain_ifelse!(setter_blk, cnd, esc(body))
+                        chain_ifelse!(setter_blk, cnd, callexpr(esc(:setfield!), esc(self), body, esc(val)))
                         setter_docs[prop_symbol] = docstr
                     else
-                        chain_ifelse!(getter_blk, cnd, esc(body))
-                        getter_docs[prop_symbol] = docstr
+                        chain_ifelse!(getter_blk, cnd, callexpr(esc(:getfield), esc(self), body))
                     end
                     if !in(QuoteNode(prop_symbol), property_names)
                         push!(property_names, QuoteNode(prop_symbol))
-                    end
-                elseif op === :(=>)
-                    if prop_symbol == :Any
-                        if body isa QuoteNode
-                            if is_setter
-                                nested_setter_blk = callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), body), esc(:p), esc(val))
-                            else
-                                nested_getter_blk = callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), body), esc(:p))
-                            end
-                            !in(body, nested_names) && push!(nested_names, body)
-                        elseif body isa Expr && body.head == :tuple
-                            body = body.args
-                            n = length(body)
-                            for (i,n_i) in enumerate(body)
-                                if is_setter
-                                    if i != n
-                                        chain_ifelse!(
-                                            nested_setter_blk,
-                                            callexpr(esc(:hasproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p)),
-                                            callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), n_i), esc(:p), esc(val))
-                                        )
-                                    else
-                                        final_out!(nested_setter_blk,
-                                            callexpr(esc(:setproperty!), callexpr(esc(:getfield), esc(self), n_i), esc(:p), esc(val))
-                                        )
-                                    end
-                                    setter_docs[prop_symbol] = docstr
-                                else
-                                    if i != n
-                                        chain_ifelse!(
-                                            nested_getter_blk,
-                                            callexpr(esc(:hasproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p)),
-                                            callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p))
-                                        )
-                                    else
-                                        final_out!(nested_getter_blk,
-                                            callexpr(esc(:getproperty), callexpr(esc(:getfield), esc(self), n_i), esc(:p))
-                                        )
-                                    end
-                                    getter_docs[prop_symbol] = docstr
-                                end
-                                !in(n_i, nested_names) && push!(nested_names, n_i)
-                            end
-                        end
-                    else
-                        cnd = callexpr(:(===), esc(:p), QuoteNode(prop_symbol))
-                        body isa QuoteNode || error("shortand property assignments should take the form `property_name => :fieldname`, got $(typeof(body)) for field name.")
-                        if is_setter
-                            chain_ifelse!(setter_blk, cnd, callexpr(esc(:setfield!), esc(self), body, esc(val)))
-                            setter_docs[prop_symbol] = docstr
-                        else
-                            chain_ifelse!(getter_blk, cnd, callexpr(esc(:getfield), esc(self), body))
-                        end
-                        if !in(QuoteNode(prop_symbol), property_names)
-                            push!(property_names, QuoteNode(prop_symbol))
-                            getter_docs[prop_symbol] = docstr
-                        end
+                        getter_docs[prop_symbol] = docstr
                     end
                 end
-                docstr = nothing
             end
         end
     end

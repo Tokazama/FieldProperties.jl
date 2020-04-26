@@ -20,7 +20,12 @@ FieldProperties.not_property() = nothing
     @test str == "not_property(nothing) (generic function with 1 method)"
 end
 
+"""
+    TestStruct
+
+"""
 struct TestStruct
+    "x"
     p1
     p2
     p3
@@ -29,17 +34,30 @@ struct TestStruct
 end
 
 @properties TestStruct begin
+    "prop1 str"
     prop1(self) => :p1
     prop2(self) => :p2
     prop3(self) => :p3
-    prop4(self) => :p4
+    "setter str"
+    prop4!(self) => :p4
     Any(self) => :p5
     Any!(self, val) => :p5
 end
 
 t = TestStruct(1,2,3,4,5)
 
+
 @test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)
+
+
+d = @doc(TestStruct).meta[:results][1]
+io = IOBuffer()
+FieldProperties.DocStringExtensions.format(SETPROPERTY, io, d)
+@test occursin("- `prop4`: setter str", String(take!(io)))
+
+io = IOBuffer()
+FieldProperties.DocStringExtensions.format(GETPROPERTY, io, d)
+@test occursin("- ` prop1 `: prop1 str", String(take!(io)))
 
 FieldProperties._fxnname(FieldProperties.Description{values}()) == "description(values)"
 
@@ -62,10 +80,4 @@ end
 
 @test_throws ErrorException("Argument referring to self is inconsistent, got w and z.") FieldProperties.check_args(:w, :z, :x, :y)
 
-#=
-doc = Docs.DocStr(Core.svec(), nothing, Dict())
-buf = IOBuffer()
 
-d = @doc(ExampleStruct).meta[:results][1]
-DocStringExtensions.format(GETPROPERTY, buf, 
-=#
