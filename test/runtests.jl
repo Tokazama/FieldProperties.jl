@@ -39,7 +39,7 @@ end
     prop2(self) => :p2
     prop3(self) => :p3
     "setter str"
-    prop4!(self) => :p4
+    prop4!(self, val) => :p4
     Any(self) => :p5
     Any!(self, val) => :p5
 end
@@ -58,6 +58,16 @@ FieldProperties.DocStringExtensions.format(SETPROPERTY, io, d)
 io = IOBuffer()
 FieldProperties.DocStringExtensions.format(GETPROPERTY, io, d)
 @test occursin("- ` prop1 `: prop1 str", String(take!(io)))
+
+
+# does it error without nested documentation
+@properties TestStruct begin
+    prop1(self) => :p1
+    prop2(self) => :p2
+    prop3(self) => :p3
+    prop4!(self, val) => :p4
+end
+@test propertynames(t) == (:prop1,:prop2,:prop3,:prop4)
 
 FieldProperties._fxnname(FieldProperties.Description{values}()) == "description(values)"
 
