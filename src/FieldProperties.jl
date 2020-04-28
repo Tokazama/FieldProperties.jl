@@ -11,12 +11,13 @@ module FieldProperties
 
 using Markdown
 using DocStringExtensions
+using MetadataArrays
 
 export
     # Types
-    AbstractMetadata,
-    Metadata,
-    NoopMetadata,
+    AbstractPropertyList,
+    PropertyList,
+    NoopPropertyList,
     AbstractProperty,
     GETPROPERTY,
     SETPROPERTY,
@@ -45,6 +46,6 @@ include("defprop.jl")
 include("documentation.jl")
 include("properties.jl")
 include("general.jl")
-include("metadata.jl")
+include("propertylist.jl")
 
 end

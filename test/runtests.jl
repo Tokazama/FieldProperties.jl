@@ -79,7 +79,7 @@ T = FieldProperties.calmin_type(x)
 T = FieldProperties.calmax_type(x)
 @test T <: Float64
 
-include("metadata_tests.jl")
+include("propertylist_tests.jl")
 
 @testset "FieldProperties docs" begin
     doctest(FieldProperties)

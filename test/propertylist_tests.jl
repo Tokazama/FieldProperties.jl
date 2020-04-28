@@ -1,5 +1,5 @@
-@testset "Metadata" begin
-    m = Metadata(; a = 1, b= 2)
+@testset "PropertyList" begin
+    m = PropertyList(; a = 1, b= 2)
 
     @test iterate(m) == (Pair{Symbol,Any}(:a, 1), 2)
     @test iterate(m, 2) == (Pair{Symbol,Any}(:b, 2), 3)
@@ -31,8 +31,8 @@
     @test FieldProperties.suppress(m) == ()
 end
 
-@testset "NoopMetadata" begin
-    np = NoopMetadata()
+@testset "NoopPropertyList" begin
+    np = NoopPropertyList()
 
     @test @inferred(isempty(np))
     @test @inferred(isnothing(get(np, :anything, nothing)))
@@ -46,17 +46,17 @@ end
     @test_throws ErrorException setindex!(np, 1, :bar)
 end
 
-m = Metadata()
+m = PropertyList()
 m.foo = 1
 m.bar = 2
 m.suppress = (:foo,)
 
-@testset "Print Metadata" begin
+@testset "Print PropertyList" begin
    io = IOBuffer()
     show(io, m)
 
     x="""
-    Metadata{Dict{Symbol,Any}} with 3 entries
+    PropertyList{Dict{Symbol,Any}} with 3 entries
         bar: 2
         suppress: (:foo,)
         foo: <suppressed>"""
@@ -70,3 +70,4 @@ description!(m, "foo")
 
 description!(m, rand(UInt8, 8))
 @test isa(description(m), String)
+
