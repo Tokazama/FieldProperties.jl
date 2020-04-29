@@ -1,7 +1,13 @@
 
-using Documenter, FieldProperties, DocStringExtensions
-include("ExampleModule/src/ExampleModule.jl")
-import .ExampleModule
+let doclib = abspath(joinpath(@__DIR__, "ExampleModule", "src"))
+    doclib in LOAD_PATH || pushfirst!(LOAD_PATH, doclib)
+end
+
+using Documenter
+using FieldProperties
+using DocStringExtensions
+#include("ExampleModule/src/ExampleModule.jl")
+import ExampleModule
 
 makedocs(;
     modules=[FieldProperties, ExampleModule],
