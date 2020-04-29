@@ -1,7 +1,7 @@
 name = "FieldProperties"
 uuid = "127e4479-4c95-493a-afaa-609d38175b70"
 authors = ["zchristensen "]
-version = "0.7.0"
+version = "0.6.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
