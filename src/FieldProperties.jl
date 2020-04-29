@@ -1,13 +1,9 @@
-"""
-    FieldProperties
-
-`FieldProperties` provides an interface for creating method/property based
-APIs that can be flexibly incorporated into Julia structures. This is predominantly
-accomplished through the use of [`@defprop`](@ref) and [`@properties`](@ref).
-These macros help in the creation of methods and mapping them to the fields of a
-concrete type.
-"""
 module FieldProperties
+
+@doc let path = joinpath(dirname(@__DIR__), "README.md")
+    include_dependency(path)
+    replace(read(path, String), r"^```julia"m => "```jldoctest README")
+end FieldProperties
 
 using Markdown
 using DocStringExtensions
